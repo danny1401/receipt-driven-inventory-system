@@ -16,7 +16,7 @@ export function ConvexClientProvider({
   return (
     <ConvexBetterAuthProvider
       client={convex}
-      authClient={authClient}
+      authClient={authClient as any}
       initialToken={initialToken}
     >
       {children}

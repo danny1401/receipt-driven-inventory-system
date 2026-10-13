@@ -1,12 +1,11 @@
 "use client";
 
-import Button from "@/components/ui/Button";
 import { authClient } from "@/lib/auth-client";
 
 const Page = () => {
   return (
     <div className="flex flex-col items-center justify-center h-screen">
-      <Button
+      <button
         onClick={async () => {
           await authClient.signIn.social({
             provider: "github",
@@ -15,7 +14,7 @@ const Page = () => {
         }}
       >
         Sign in with GitHub
-      </Button>
+      </button>
     </div>
   );
 };
