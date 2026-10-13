@@ -5,7 +5,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
 import { ConvexClientProvider } from "@/components/ConvexClientProvider";
-import { getToken } from "@/lib/auth-server";
+import { getToken } from "@/lib/authServer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

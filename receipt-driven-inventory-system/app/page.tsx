@@ -1,5 +1,5 @@
 import { api } from "@/convex/_generated/api";
-import { preloadAuthQuery } from "@/lib/auth-server";
+import { preloadAuthQuery } from "@/lib/authServer";
 import Header from "./header";
 
 const Page = async () => {

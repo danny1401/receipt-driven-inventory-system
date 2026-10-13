@@ -1,4 +1,4 @@
-import { isAuthenticated } from "@/lib/auth-server";
+import { isAuthenticated } from "@/lib/authServer";
 
 const Page = async () => {
   const hasToken = await isAuthenticated();
