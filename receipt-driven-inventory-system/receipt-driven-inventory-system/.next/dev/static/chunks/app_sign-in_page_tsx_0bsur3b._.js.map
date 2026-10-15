@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///C:/Users/Dan28/Documents/Coding/Portfolio/receipt-driven%20inventory%20system/receipt-driven-inventory-system/app/sign-in/page.tsx"],"sourcesContent":["\"use client\";\r\n\r\nimport { authClient } from \"@/lib/authClient\";\r\n\r\nconst Page = () => {\r\n  const handleSignIn = async () => {\r\n    try {\r\n      await authClient.signIn.social({\r\n        provider: \"google\",\r\n        callbackURL: \"/dashboard\",\r\n      });\r\n    } catch (error) {\r\n      console.error(\"Error during sign-in:\", error);\r\n    }\r\n  };\r\n\r\n  return (\r\n    <div className=\"flex flex-col items-center justify-center h-screen\">\r\n      <button onClick={handleSignIn}>\r\n        Sign in with Google\r\n      </button>\r\n    </div>\r\n  );\r\n};\r\n\r\nexport default Page;"],"names":["Page","handleSignIn","signIn","social","provider","callbackURL","error","console","className","onClick"],"mappings":";;;;;AAEA;AAFA;;;AAIA,MAAMA,OAAO;IACX,MAAMC,eAAe;QACnB,IAAI;YACF,MAAM,kIAAU,CAACC,MAAM,CAACC,MAAM,CAAC;gBAC7BC,UAAU;gBACVC,aAAa;YACf;QACF,EAAE,OAAOC,OAAO;YACdC,QAAQD,KAAK,CAAC,yBAAyBA;QACzC;IACF;IAEA,qBACE,6LAAC;QAAIE,WAAU;kBACb,cAAA,6LAAC;YAAOC,SAASR;sBAAc;;;;;;;;;;;AAKrC;KAnBMD;uCAqBSA"}}]
+}
