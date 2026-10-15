@@ -18,6 +18,16 @@ npm install
 npm run dev
 ```
 
+PDF receipt processing uses the Google Gemini API. Set `GEMINI_API_KEY` on the Convex deployment before processing receipts:
+
+```
+npx convex env set GEMINI_API_KEY "paste-your-api-key-here"
+```
+
+Replace the quoted placeholder with your Gemini API key.
+
+Set the variable separately for each Convex deployment environment.
+
 If you're reading this README on GitHub and want to use this template, run:
 
 ```
