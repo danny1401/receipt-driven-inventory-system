@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 
-import { ThemeProvider } from './theme-provider'
+import { ConvexClientProvider } from "@/components/ConvexClientProvider";
+import { getToken } from "@/lib/authServer";
+
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
-import { ConvexClientProvider } from "@/components/ConvexClientProvider";
-import { getToken } from "@/lib/authServer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -35,14 +35,7 @@ export default async function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body>
         <ConvexClientProvider initialToken={token}>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
             {children}
-          </ThemeProvider>
         </ConvexClientProvider>
       </body>
     </html>
