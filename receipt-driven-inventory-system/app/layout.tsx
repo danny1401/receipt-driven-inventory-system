@@ -7,7 +7,7 @@ import { preloadAuthQuery } from "@/lib/authServer";
 
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { Header } from "../components/ui/header";
+import { Header } from "../components/ui";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -43,8 +43,10 @@ export default async function RootLayout({
     >
       <body>
         <ConvexClientProvider initialToken={token}>
+          <div className="flex min-h-svh flex-col">
             <Header preloadedUserQuery={preloadedUserQuery} />
-            {children}
+            <main className="flex-1">{children}</main>
+          </div>
         </ConvexClientProvider>
       </body>
     </html>
