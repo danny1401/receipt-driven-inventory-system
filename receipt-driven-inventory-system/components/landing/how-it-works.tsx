@@ -1,6 +1,6 @@
 import { BoxesIcon, ShieldCheckIcon, SparklesIcon, UploadIcon } from "lucide-react";
 
-import { SectionHeading } from "@/components/landing/section-heading";
+import { SectionHeading } from "@/components/landing";
 
 const STEPS = [
   {

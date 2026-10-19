@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePreloadedAuthQuery } from "@convex-dev/better-auth/nextjs/client";
 import type { Preloaded } from "convex/react";
 import type { api } from "@/convex/_generated/api";
-import { MenuIcon, ReceiptTextIcon, XIcon } from "lucide-react";
+import { MenuIcon, ReceiptTextIcon, Settings, XIcon } from "lucide-react";
 import { cn } from "cn";
 
 import { buttonVariants } from "@/components/ui/button";
@@ -21,27 +21,62 @@ export const Header = ({
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-background/80 backdrop-blur-xl">
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
-        <Link
-          href="/"
-          onClick={() => setMenuOpen(false)}
-          className="flex min-w-0 items-center gap-2.5 font-semibold tracking-tight"
-        >
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <ReceiptTextIcon className="size-5" />
-          </span>
-          <span className="truncate text-base">
-            Receipt-Driven Inventory System
-          </span>
-        </Link>
+        {user ? (
+          <Link
+            href="/dashboard"
+            onClick={() => setMenuOpen(false)}
+            className="flex min-w-0 items-center gap-2.5 font-semibold tracking-tight"
+          >
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+              <ReceiptTextIcon className="size-5" />
+            </span>
+            <span className="truncate text-base">
+              Receipt-Driven Inventory System
+            </span>
+          </Link>
+        ) : (
+          <Link
+            href="/"
+            onClick={() => setMenuOpen(false)}
+            className="flex min-w-0 items-center gap-2.5 font-semibold tracking-tight"
+          >
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+              <ReceiptTextIcon className="size-5" />
+            </span>
+            <span className="truncate text-base">
+              Receipt-Driven Inventory System
+            </span>
+          </Link>
+        )}
 
         <div className="hidden items-center gap-2 md:flex">
           {user ? (
-            <Link
-              href="/dashboard"
-              className={cn(buttonVariants({ size: "lg" }), "px-4")}
-            >
-              Dashboard
-            </Link>
+            <>
+              <Link
+                href="/dashboard"
+                className={cn(buttonVariants({ size: "lg" }), "px-4")}
+              >
+                Dashboard
+              </Link>
+              <Link
+                href="/inventory"
+                className={cn(buttonVariants({ size: "lg" }), "px-4")}
+              >
+                Inventory
+              </Link>
+              <Link
+                href="/invoices"
+                className={cn(buttonVariants({ size: "lg" }), "px-4")}
+              >
+                Invoices
+              </Link>
+              <Link
+                href="/settings"
+                className={cn(buttonVariants({ size: "lg" }))}
+              >
+                <Settings className="size-5" />
+              </Link>
+            </>
           ) : (
             <>
               <Link
@@ -86,19 +121,57 @@ export const Header = ({
           <nav className="mx-auto flex w-full max-w-6xl flex-col gap-1 px-4 py-4 sm:px-6">
             <div className="mt-2 flex flex-col gap-2">
               {user ? (
-                <Link
-                  href="/dashboard"
-                  onClick={() => setMenuOpen(false)}
-                  className={buttonVariants({ size: "lg" })}
-                >
-                  Dashboard
-                </Link>
+                <>
+                  <Link
+                    href="/dashboard"
+                    onClick={() => setMenuOpen(false)}
+                    className={buttonVariants({
+                      variant: "outline",
+                      size: "lg",
+                    })}
+                  >
+                    Dashboard
+                  </Link>
+                  <Link
+                    href="/inventory"
+                    onClick={() => setMenuOpen(false)}
+                    className={buttonVariants({
+                      variant: "outline",
+                      size: "lg",
+                    })}
+                  >
+                    Inventory
+                  </Link>
+                  <Link
+                    href="/invoices"
+                    onClick={() => setMenuOpen(false)}
+                    className={buttonVariants({
+                      variant: "outline",
+                      size: "lg",
+                    })}
+                  >
+                    Invoices
+                  </Link>
+                  <Link
+                    href="/settings"
+                    onClick={() => setMenuOpen(false)}
+                    className={buttonVariants({
+                      variant: "outline",
+                      size: "lg",
+                    })}
+                  >
+                    Settings
+                  </Link>
+                </>
               ) : (
                 <>
                   <Link
                     href="/sign-in"
                     onClick={() => setMenuOpen(false)}
-                    className={buttonVariants({ variant: "outline", size: "lg" })}
+                    className={buttonVariants({
+                      variant: "outline",
+                      size: "lg",
+                    })}
                   >
                     Sign in
                   </Link>

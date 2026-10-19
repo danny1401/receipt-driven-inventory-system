@@ -1,7 +1,6 @@
-import { FaqAccordion } from "@/components/landing/faq-accordion";
-import { SectionHeading } from "@/components/landing/section-heading";
+import { FAQAccordion, SectionHeading } from "@/components/landing";
 
-export function Faq() {
+export function FAQ() {
   return (
     <section
       id="faq"
@@ -14,7 +13,7 @@ export function Faq() {
           description="Everything you need to know before you upload your first receipt."
         />
         <div className="mt-12">
-          <FaqAccordion />
+          <FAQAccordion />
         </div>
       </div>
     </section>

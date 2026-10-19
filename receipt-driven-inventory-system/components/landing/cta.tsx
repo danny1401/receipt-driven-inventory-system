@@ -4,7 +4,7 @@ import { ArrowRightIcon } from "lucide-react";
 
 import { buttonVariants } from "@/components/ui/button";
 
-export function Cta() {
+export function CTA() {
   return (
     <section className="border-b border-border/60">
       <div className="mx-auto w-full max-w-6xl px-4 py-20 sm:px-6 sm:py-24 lg:px-8">

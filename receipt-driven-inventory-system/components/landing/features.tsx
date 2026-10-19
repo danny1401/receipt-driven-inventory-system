@@ -7,7 +7,7 @@ import {
   ShieldCheckIcon,
 } from "lucide-react";
 
-import { SectionHeading } from "@/components/landing/section-heading";
+import { SectionHeading } from "@/components/landing";
 import {
   Card,
   CardDescription,

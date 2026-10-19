@@ -46,7 +46,7 @@ const FAQ_ITEMS = [
   },
 ];
 
-export function FaqAccordion() {
+export function FAQAccordion() {
   return (
     <Accordion className="mx-auto w-full max-w-3xl">
       {FAQ_ITEMS.map((item) => (
