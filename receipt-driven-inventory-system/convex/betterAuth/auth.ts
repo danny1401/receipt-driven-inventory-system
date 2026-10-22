@@ -22,7 +22,7 @@ export const authComponent = createClient<DataModel, typeof schema>(
 // Better Auth Options
 export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
   return {
-    appName: "My App",
+    appName: "Receipt-Driven Inventory System",
     baseURL: process.env.SITE_URL,
     secret: process.env.BETTER_AUTH_SECRET,
     database: authComponent.adapter(ctx),
@@ -31,13 +31,19 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
     },
     socialProviders: {
       google: {
-        clientId: process.env.GOOGLE_CLIENT_ID as string,
-        clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+        clientId: process.env.GOOGLE_CLIENT_ID! as string,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET! as string,
       },
     },
     session: {
       expiresIn: 60 * 60 * 24 * 30, // Change default session to 30 days
       updateAge: 60 * 60 * 24,      // Extend expiry if active within 1 day
+    },
+    user: {
+      // Required by the "Delete account" flow on /profile.
+      deleteUser: {
+        enabled: true,
+      },
     },
     plugins: [convex({ authConfig })],
   } satisfies BetterAuthOptions;

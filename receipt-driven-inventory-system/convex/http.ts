@@ -18,10 +18,13 @@ http.route({
       const { fileName, fileData } = payload;
 
       if (!fileData) {
-        return new Response(JSON.stringify({ error: "No file data provided" }), {
-          status: 400,
-          headers: { "Content-Type": "application/json" },
-        });
+        return new Response(
+          JSON.stringify({ error: "No file data provided" }),
+          {
+            status: 400,
+            headers: { "Content-Type": "application/json" },
+          },
+        );
       }
 
       // Convert Base64 file data to a Blob and store it in Convex File Storage
@@ -30,21 +33,32 @@ http.route({
       for (let i = 0; i < binaryString.length; i++) {
         bytes[i] = binaryString.charCodeAt(i);
       }
+
+      // Store the blob in Convex file storage
       const blob = new Blob([bytes], { type: "application/pdf" });
       const storageId = await ctx.storage.store(blob);
-      
-      // Schedule the PDF extraction action to run immediately in the background
-      await ctx.scheduler.runAfter(0, internal.email.pdfProcessor.processPdf, {
-        storageId,
-        fileName: fileName || "attachment.pdf",
-      });
 
+      // Schedule the PDF extraction action to run immediately in the background
+      await ctx.scheduler.runAfter(
+        0,
+        internal.invoice.invoiceProcessor.processInvoice,
+        {
+          storageId,
+          fileName: fileName || "attachment.pdf",
+          createdAt: Date.now(),
+        },
+      );
+
+      // Return a JSON response
       return new Response(
-        JSON.stringify({ success: true, message: "PDF received and queued for processing" }),
+        JSON.stringify({
+          success: true,
+          message: "PDF received and queued for processing",
+        }),
         {
           status: 200,
           headers: { "Content-Type": "application/json" },
-        }
+        },
       );
     } catch (error: any) {
       console.error("Error handling inbound webhook:", error);
@@ -53,7 +67,7 @@ http.route({
         {
           status: 500,
           headers: { "Content-Type": "application/json" },
-        }
+        },
       );
     }
   }),

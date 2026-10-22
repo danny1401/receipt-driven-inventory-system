@@ -9,9 +9,12 @@
  */
 
 import type * as auth from "../auth.js";
-import type * as email_pdfProcessor from "../email/pdfProcessor.js";
-import type * as email_receipt from "../email/receipt.js";
+import type * as functions from "../functions.js";
 import type * as http from "../http.js";
+import type * as invoice_extractInvoice from "../invoice/extractInvoice.js";
+import type * as invoice_flagInvoice from "../invoice/flagInvoice.js";
+import type * as invoice_invoiceProcessor from "../invoice/invoiceProcessor.js";
+import type * as invoice_saveInvoice from "../invoice/saveInvoice.js";
 
 import type {
   ApiFromModules,
@@ -21,9 +24,12 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
-  "email/pdfProcessor": typeof email_pdfProcessor;
-  "email/receipt": typeof email_receipt;
+  functions: typeof functions;
   http: typeof http;
+  "invoice/extractInvoice": typeof invoice_extractInvoice;
+  "invoice/flagInvoice": typeof invoice_flagInvoice;
+  "invoice/invoiceProcessor": typeof invoice_invoiceProcessor;
+  "invoice/saveInvoice": typeof invoice_saveInvoice;
 }>;
 
 /**
