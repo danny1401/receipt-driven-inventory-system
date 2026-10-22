@@ -2,13 +2,23 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+
 import { usePreloadedAuthQuery } from "@convex-dev/better-auth/nextjs/client";
 import type { Preloaded } from "convex/react";
 import type { api } from "@/convex/_generated/api";
-import { MenuIcon, ReceiptTextIcon, Settings, XIcon } from "lucide-react";
-import { cn } from "cn";
 
+import { cn } from "cn";
 import { buttonVariants } from "@/components/ui/button";
+import { MenuIcon, ReceiptTextIcon, XIcon } from "lucide-react";
+
+import { UserAvatar } from "./user-avatar";
+
+const navigationAddresses = [
+  { href: "/dashboard", label: "Dashboard" },
+  { href: "/inventory", label: "Inventory" },
+  { href: "/invoices", label: "Invoices" },
+];
 
 export const Header = ({
   preloadedUserQuery,
@@ -16,6 +26,7 @@ export const Header = ({
   preloadedUserQuery: Preloaded<typeof api.auth.getCurrentUser>;
 }) => {
   const user = usePreloadedAuthQuery(preloadedUserQuery);
+  const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
@@ -49,71 +60,87 @@ export const Header = ({
           </Link>
         )}
 
-        <div className="hidden items-center gap-2 md:flex">
-          {user ? (
-            <>
-              <Link
-                href="/dashboard"
-                className={cn(buttonVariants({ size: "lg" }), "px-4")}
-              >
-                Dashboard
-              </Link>
-              <Link
-                href="/inventory"
-                className={cn(buttonVariants({ size: "lg" }), "px-4")}
-              >
-                Inventory
-              </Link>
-              <Link
-                href="/invoices"
-                className={cn(buttonVariants({ size: "lg" }), "px-4")}
-              >
-                Invoices
-              </Link>
-              <Link
-                href="/settings"
-                className={cn(buttonVariants({ size: "lg" }))}
-              >
-                <Settings className="size-5" />
-              </Link>
-            </>
-          ) : (
-            <>
-              <Link
-                href="/log-in"
-                className={cn(
-                  buttonVariants({ variant: "ghost", size: "lg" }),
-                  "px-4 text-muted-foreground hover:text-foreground",
-                )}
-              >
-                Log in
-              </Link>
-              <Link
-                href="/sign-in"
-                className={cn(buttonVariants({ size: "lg" }), "px-4")}
-              >
-                Get started
-              </Link>
-            </>
-          )}
-        </div>
+        <div className="flex items-center gap-2">
+          <div className="hidden items-center gap-2 md:flex">
+            {user ? (
+              // Map through main links to avoid repetitive code
+              navigationAddresses.map((item) => {
+                const isActive = pathname === item.href;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={cn(
+                      buttonVariants({
+                        variant: isActive ? "default" : "ghost",
+                        size: "lg",
+                      }),
+                      "px-4",
+                    )}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              })
+            ) : (
+              <>
+                <Link
+                  href="/log-in"
+                  className={cn(
+                    buttonVariants({ variant: "ghost", size: "lg" }),
+                    "px-4 text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  Log in
+                </Link>
+                <Link
+                  href="/sign-in"
+                  className={cn(buttonVariants({ size: "lg" }), "px-4")}
+                >
+                  Get started
+                </Link>
+              </>
+            )}
+          </div>
 
-        <button
-          type="button"
-          aria-label={menuOpen ? "Close menu" : "Open menu"}
-          aria-expanded={menuOpen}
-          onClick={() => setMenuOpen((open) => !open)}
-          className={cn(
-            buttonVariants({ variant: "ghost", size: "icon-lg" }),
-            "md:hidden",
-          )}
-        >
-          {menuOpen ? (
-            <XIcon className="size-5" />
-          ) : (
-            <MenuIcon className="size-5" />
-          )}
-        </button>
+          {user ? (
+            <Link
+              href="/profile"
+              onClick={() => setMenuOpen(false)}
+              aria-label="Profile"
+              title="Profile"
+              className={cn(
+                "flex size-9 shrink-0 items-center justify-center rounded-full transition-shadow focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+                pathname === "/profile"
+                  ? "ring-2 ring-foreground/60"
+                  : "ring-1 ring-foreground/10 hover:ring-foreground/30",
+              )}
+            >
+              <UserAvatar
+                name={user.name}
+                email={user.email}
+                imageUrl={user.pictureUrl}
+              />
+            </Link>
+          ) : null}
+
+          <button
+            type="button"
+            aria-label={menuOpen ? "Close menu" : "Open menu"}
+            aria-expanded={menuOpen}
+            onClick={() => setMenuOpen((open) => !open)}
+            className={cn(
+              buttonVariants({ variant: "ghost", size: "icon-lg" }),
+              "md:hidden",
+            )}
+          >
+            {menuOpen ? (
+              <XIcon className="size-5" />
+            ) : (
+              <MenuIcon className="size-5" />
+            )}
+          </button>
+        </div>
       </div>
 
       {menuOpen && (
@@ -153,14 +180,14 @@ export const Header = ({
                     Invoices
                   </Link>
                   <Link
-                    href="/settings"
+                    href="/profile"
                     onClick={() => setMenuOpen(false)}
                     className={buttonVariants({
                       variant: "outline",
                       size: "lg",
                     })}
                   >
-                    Settings
+                    Profile
                   </Link>
                 </>
               ) : (
