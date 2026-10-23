@@ -11,50 +11,63 @@ export default defineSchema({
     storageId: v.id("_storage"),
     createdAt: v.number(),
 
-    supplierName: v.union(v.string(), v.null()),
-    supplierOrgId: v.union(v.string(), v.null()),
-    customerName: v.union(v.string(), v.null()), // Restaurant name
-    customerId: v.union(v.string(), v.null()), // Restaurant ID
-
     orderId: v.union(v.string(), v.null()),
     orderDate: v.union(v.string(), v.null()),
     deliveringDate: v.union(v.string(), v.null()),
-    sum: v.union(v.number(), v.null()),
+    
+    supplierId: v.id("suppliers"),
+    customerId: v.id("customers"),   // Restaurant ID
+
+    sum: v.optional(v.union(v.number(), v.null())),
   })
+    .index("by_fileName", ["fileName"])
     .index("by_orderId", ["orderId"])
     .index("by_orderDate", ["orderDate"])
     .index("by_customerId", ["customerId"])
-    .index("by_customerName", ["customerName"])
-    .index("by_supplierOrgId", ["supplierOrgId"])
-    .index("by_supplierName", ["supplierName"]),
-
-  lineItems: defineTable({
-    orderId: v.union(v.string(), v.null()),
-
-    supplierName: v.union(v.string(), v.null()),
-    supplierOrgId: v.union(v.string(), v.null()),
-    customerName: v.union(v.string(), v.null()), // Restaurant name
-    customerId: v.union(v.string(), v.null()), // Restaurant ID
-
-    itemId: v.union(v.string(), v.null()),
-    itemName: v.union(v.string(), v.null()),
-    category: v.union(v.string(), v.null()),
-    quantity: v.union(v.number(), v.null()),
-    quantityUnit: v.union(v.string(), v.null()),
-    unitPrice: v.union(v.number(), v.null()),
-    total: v.union(v.number(), v.null()),
-  })
-    .index("orderId", ["orderId"])
-    .index("by_itemId", ["itemId"])
-    .index("by_itemName", ["itemName"])
-    .index("by_customerId", ["customerId"])
-    .index("by_customerName", ["customerName"])
-    .index("by_supplierOrgId", ["supplierOrgId"])
-    .index("by_supplierName", ["supplierName"]),
+    .index("by_supplierId", ["supplierId"]),
 
   flaggedInvoices: defineTable({
     fileName: v.string(),
     storageId: v.id("_storage"),
     createdAt: v.number(),
-  }),
+  })
+    .index("by_fileName", ["fileName"]),
+
+  suppliers: defineTable({
+    supplierOrgId: v.union(v.string(), v.null()),
+    supplierName: v.string(),
+  })
+    .index("by_supplierOrgId", ["supplierOrgId"])
+    .index("by_supplierName", ["supplierName"]),
+  
+  customers: defineTable({
+    customerOrgId: v.union(v.string(), v.null()),  // Restaurant ID
+    customerName: v.string(),                      // Restaurant Name
+  })
+    .index("by_customerOrgId", ["customerOrgId"])
+    .index("by_customerName", ["customerName"]),
+  
+  items: defineTable({
+    sku: v.union(v.string(), v.null()),
+    itemName: v.string(),
+    category: v.string(),
+    supplierId: v.id("suppliers"),
+  })
+    .index("by_itemName", ["itemName"])
+    .index("by_category", ["category"])
+    .index("by_supplierId", ["supplierId"]),
+
+  lineItems: defineTable({
+    quantity: v.union(v.number(), v.null()),
+    quantityUnit: v.union(v.string(), v.null()),
+    unitPrice: v.union(v.number(), v.null()),
+    total: v.union(v.number(), v.null()),
+    
+    itemId: v.id("items"),
+    invoiceId: v.optional(v.id("invoices")),
+    customerId: v.id("customers"), 
+  })
+    .index("by_itemId", ["itemId"])
+    .index("by_invoiceId", ["invoiceId"])
+    .index("by_customerId", ["customerId"]),
 });

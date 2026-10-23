@@ -8,10 +8,10 @@ export const saveInvoice = internalMutation({
     storageId: v.id("_storage"),
     createdAt: v.number(),
     
-    supplierName: v.union(v.string(), v.null()),
+    supplierName: v.string(),
     supplierOrgId: v.union(v.string(), v.null()),
-    customerName: v.union(v.string(), v.null()),   
-    customerId: v.union(v.string(), v.null()),     
+    customerName: v.string(),   
+    customerOrgId: v.union(v.string(), v.null()),     
 
     orderId: v.union(v.string(), v.null()),
     orderDate: v.union(v.string(), v.null()),
@@ -19,9 +19,9 @@ export const saveInvoice = internalMutation({
     
     order: v.array(
       v.object({
-        itemId: v.union(v.string(), v.null()),
-        itemName: v.union(v.string(), v.null()),
-        category: v.union(v.string(), v.null()),
+        sku: v.union(v.string(), v.null()),
+        itemName: v.string(),
+        category: v.string(),
         quantity: v.union(v.number(), v.null()),
         quantityUnit: v.union(v.string(), v.null()),
         unitPrice: v.union(v.number(), v.null()),
@@ -34,37 +34,44 @@ export const saveInvoice = internalMutation({
   // Mutation implementation.
   handler: async (ctx, args) => {
     console.log("📥 saveInvoice mutation called with args:", JSON.stringify(args, null, 2));
-    await ctx.db.insert("invoices", {
+    const newSupplierId = await ctx.db.insert("suppliers", {
+      supplierOrgId: args.supplierOrgId,
+      supplierName: args.supplierName,
+    });
+    const newCustomerId = await ctx.db.insert("customers", {
+      customerOrgId: args.customerOrgId,
+      customerName: args.customerName,
+    });
+    const newInvoiceId = await ctx.db.insert("invoices", {
       fileName: args.fileName,
       storageId: args.storageId,
       createdAt: args.createdAt,
       
-      supplierName: args.supplierName,
-      supplierOrgId: args.supplierOrgId,
-      customerName: args.customerName,   // Restaurant name
-      customerId: args.customerId,     // Restaurant ID
-
       orderId: args.orderId,
       orderDate: args.orderDate,
       deliveringDate: args.deliveringDate,
 
+      supplierId: newSupplierId,
+      customerId: newCustomerId,
+
       sum: args.sum,
     });
+    
     for (const item of args.order) {
-      await ctx.db.insert("lineItems", {
-        orderId: args.orderId,
-        
-        supplierName: args.supplierName,
-        supplierOrgId: args.supplierOrgId,
-        customerName: args.customerName,   // Restaurant name
-        customerId: args.customerId,     // Restaurant ID
-
-        itemId: item.itemId,
+      const newItemId = await ctx.db.insert("items", { 
+        sku: item.sku,
         itemName: item.itemName,
         category: item.category,
+        supplierId: newSupplierId,
+      });
+
+      await ctx.db.insert("lineItems", {
+        itemId: newItemId,
+        invoiceId: newInvoiceId,
+        customerId: newCustomerId,
         quantity: item.quantity,
         quantityUnit: item.quantityUnit,
-        unitPrice: item.unitPrice, // Make sure your schema matches field naming (unitPrice vs unit_price)
+        unitPrice: item.unitPrice,
         total: item.total,
       });
     }

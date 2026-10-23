@@ -9,11 +9,14 @@
  */
 
 import type * as auth from "../auth.js";
-import type * as functions from "../functions.js";
 import type * as http from "../http.js";
+import type * as inventory_helpers from "../inventory/helpers.js";
+import type * as inventory_inventory from "../inventory/inventory.js";
+import type * as inventory_invoices from "../inventory/invoices.js";
+import type * as inventory_lineItem from "../inventory/item.js";
 import type * as invoice_extractInvoice from "../invoice/extractInvoice.js";
 import type * as invoice_flagInvoice from "../invoice/flagInvoice.js";
-import type * as invoice_invoiceProcessor from "../invoice/invoiceProcessor.js";
+import type * as invoice_processInvoice from "../invoice/processInvoice.js";
 import type * as invoice_saveInvoice from "../invoice/saveInvoice.js";
 
 import type {
@@ -24,11 +27,15 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
-  functions: typeof functions;
   http: typeof http;
+  "inventory/helpers": typeof inventory_helpers;
+  "inventory/inventory": typeof inventory_inventory;
+  "inventory/invoices": typeof inventory_invoices;
+  "inventory/itemType": typeof inventory_itemType;
+  "inventory/lineItem": typeof inventory_lineItem;
   "invoice/extractInvoice": typeof invoice_extractInvoice;
   "invoice/flagInvoice": typeof invoice_flagInvoice;
-  "invoice/invoiceProcessor": typeof invoice_invoiceProcessor;
+  "invoice/processInvoice": typeof invoice_processInvoice;
   "invoice/saveInvoice": typeof invoice_saveInvoice;
 }>;
 

@@ -41,7 +41,7 @@ http.route({
       // Schedule the PDF extraction action to run immediately in the background
       await ctx.scheduler.runAfter(
         0,
-        internal.invoice.invoiceProcessor.processInvoice,
+        internal.invoice.processInvoice.processInvoice,
         {
           storageId,
           fileName: fileName || "attachment.pdf",
