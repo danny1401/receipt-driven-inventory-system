@@ -23,7 +23,7 @@ export const processInvoice = internalAction({
       const arrayBuffer = await fileBlob.arrayBuffer();
       const base64Data = Buffer.from(arrayBuffer).toString("base64");
 
-      // 3. 
+      // 3.
       // Extract structured JSON data from the PDF
       // Call Gemini with automatic retry logic for 503 errors
       const response = await extractInvoiceWithRetry(base64Data);
@@ -34,25 +34,35 @@ export const processInvoice = internalAction({
       }
 
       // 4. Parse the JSON output from Gemini
-      parsedData = JSON.parse(textOutput);
+      const cleanedText = textOutput.replace(/```json\n?|\n?```/g, "").trim();
+      parsedData = JSON.parse(cleanedText);
+      console.log(`[processInvoice] Parsing response.`);
 
       // 5. Check if critical array items are missing or empty
       if (!parsedData.order || parsedData.order.length === 0) {
-        // Save the structured JSON to your database via internal mutation
-        await ctx.runMutation(internal.invoice.saveInvoice.saveInvoice, {
-          fileName: args.fileName,
-          storageId: args.storageId,
-          createdAt: args.createdAt,
-          requiredReview: false,
-
-          supplierName: parsedData.supplierName,
-          supplierOrgId: parsedData.supplierOrgId,
-          customerName: parsedData.customerName,
-          customerId: parsedData.customerId,
-
-          ...parsedData.order,
-        });
+        throw new Error("[processInvoice] Validation failed: The extracted invoice is missing required 'order' items.");
       }
+
+      await ctx.runMutation(internal.invoice.saveInvoice.saveInvoice, {
+        fileName: args.fileName,
+        storageId: args.storageId,
+        createdAt: args.createdAt,
+
+        supplierName: parsedData.supplierName,
+        supplierOrgId: parsedData.supplierOrgId,
+        customerName: parsedData.customerName,
+        customerOrgId: parsedData.customerId,
+
+        orderId: parsedData.orderId,
+        orderDate: parsedData.orderDate,
+        deliveringDate: parsedData.orderDate,
+
+        order: parsedData.order,
+        sum: null,
+        searchField: parsedData.orderId.toLowerCase(),
+      });
+
+      console.log(`[processInvoice] Forwarding to internal mutation [saveInvoice].`);
     } catch (error: any) {
       // If any error happens (API down, bad JSON, unreadable PDF), flag it for review
       console.error(

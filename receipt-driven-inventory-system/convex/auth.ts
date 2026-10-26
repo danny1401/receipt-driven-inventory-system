@@ -7,3 +7,5 @@ export const getCurrentUser = query({
     return identity;
   },
 });
+
+// Query Profile

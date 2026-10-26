@@ -31,7 +31,9 @@ export const uploadInvoice = mutation({
 export const listInvoices = query({
   args: {},
   handler: async (ctx) => {
-    const invoices = await ctx.db.query("invoices").collect();
+    const invoices = await ctx.db
+      .query("invoices")
+      .collect();
     return invoices;
   },
 });
@@ -77,6 +79,7 @@ export const addInvoice = mutation({
     customerId: v.id("customers"),
 
     sum: v.optional(v.union(v.number(), v.null())),
+    searchField: v.string(),
   },
   handler: async (ctx, args) => {
     // Optional safety check: Verify the supplier exists
@@ -100,6 +103,7 @@ export const addInvoice = mutation({
       supplierId: args.supplierId,
       customerId: args.customerId,
       sum: args.sum,
+      searchField: args.fileName.toLowerCase(),
     });
 
     // Return success along with the new ID
@@ -186,7 +190,9 @@ export const deleteInvoice = mutation({
 export const listFlaggedInvoices = query({
   args: {},
   handler: async (ctx) => {
-    const invoices = await ctx.db.query("flaggedInvoices").collect();
+    const invoices = await ctx.db
+      .query("flaggedInvoices")
+      .collect();
     return invoices;
   },
 });
@@ -251,7 +257,9 @@ export const deleteFlaggedInvoice = mutation({
 export const listSuppliers = query({
   args: {},
   handler: async (ctx) => {
-    const suppliers = await ctx.db.query("suppliers").collect();
+    const suppliers = await ctx.db
+      .query("suppliers")
+      .collect();
     return suppliers;
   },
 });
@@ -260,7 +268,9 @@ export const listSuppliers = query({
 export const listCustomers = query({
   args: {},
   handler: async (ctx) => {
-    const customers = await ctx.db.query("customers").collect();
+    const customers = await ctx.db
+      .query("customers")
+      .collect();
     return customers;
   },
 });

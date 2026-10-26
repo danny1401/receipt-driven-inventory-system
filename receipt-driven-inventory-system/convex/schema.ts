@@ -19,6 +19,10 @@ export default defineSchema({
     customerId: v.id("customers"),   // Restaurant ID
 
     sum: v.optional(v.union(v.number(), v.null())),
+    searchField: v.string(),
+  }).searchIndex("search_invoices", {
+    searchField: "searchField",
+    filterFields: ["customerId"],
   })
     .index("by_fileName", ["fileName"])
     .index("by_orderId", ["orderId"])
@@ -30,12 +34,18 @@ export default defineSchema({
     fileName: v.string(),
     storageId: v.id("_storage"),
     createdAt: v.number(),
+    searchField: v.string(),
+  }).searchIndex("search_flags", {
+    searchField: "searchField",
   })
     .index("by_fileName", ["fileName"]),
 
   suppliers: defineTable({
     supplierOrgId: v.union(v.string(), v.null()),
     supplierName: v.string(),
+    searchField: v.string(),
+  }).searchIndex("search_suppliers", {
+    searchField: "searchField",
   })
     .index("by_supplierOrgId", ["supplierOrgId"])
     .index("by_supplierName", ["supplierName"]),
@@ -43,6 +53,9 @@ export default defineSchema({
   customers: defineTable({
     customerOrgId: v.union(v.string(), v.null()),  // Restaurant ID
     customerName: v.string(),                      // Restaurant Name
+    searchField: v.string(),
+  }).searchIndex("search_customers", {
+    searchField: "searchField",
   })
     .index("by_customerOrgId", ["customerOrgId"])
     .index("by_customerName", ["customerName"]),
@@ -52,6 +65,9 @@ export default defineSchema({
     itemName: v.string(),
     category: v.string(),
     supplierId: v.id("suppliers"),
+    searchField: v.string(),
+  }).searchIndex("search_items", {
+    searchField: "searchField",
   })
     .index("by_itemName", ["itemName"])
     .index("by_category", ["category"])
@@ -66,6 +82,10 @@ export default defineSchema({
     itemId: v.id("items"),
     invoiceId: v.optional(v.id("invoices")),
     customerId: v.id("customers"), 
+    searchField: v.string(),
+  }).searchIndex("search_line_items", {
+    searchField: "searchField",
+    filterFields: ["customerId"],
   })
     .index("by_itemId", ["itemId"])
     .index("by_invoiceId", ["invoiceId"])

@@ -13,7 +13,7 @@ import type * as http from "../http.js";
 import type * as inventory_helpers from "../inventory/helpers.js";
 import type * as inventory_inventory from "../inventory/inventory.js";
 import type * as inventory_invoices from "../inventory/invoices.js";
-import type * as inventory_lineItem from "../inventory/item.js";
+import type * as inventory_item from "../inventory/item.js";
 import type * as invoice_extractInvoice from "../invoice/extractInvoice.js";
 import type * as invoice_flagInvoice from "../invoice/flagInvoice.js";
 import type * as invoice_processInvoice from "../invoice/processInvoice.js";
@@ -31,8 +31,7 @@ declare const fullApi: ApiFromModules<{
   "inventory/helpers": typeof inventory_helpers;
   "inventory/inventory": typeof inventory_inventory;
   "inventory/invoices": typeof inventory_invoices;
-  "inventory/itemType": typeof inventory_itemType;
-  "inventory/lineItem": typeof inventory_lineItem;
+  "inventory/item": typeof inventory_item;
   "invoice/extractInvoice": typeof invoice_extractInvoice;
   "invoice/flagInvoice": typeof invoice_flagInvoice;
   "invoice/processInvoice": typeof invoice_processInvoice;

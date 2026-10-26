@@ -1,6 +1,5 @@
 import { v } from "convex/values";
 import { mutation, query } from "../_generated/server";
-import { getCustomerId, getItemId, getSupplierId } from "./helpers";
 
 // Get Line Item
 export const getSingleLineItem = query({
@@ -29,6 +28,8 @@ export const addItem = mutation({
 
     supplierId: v.id("suppliers"),
     customerId: v.id("customers"),
+    
+    searchField: v.string(),
   },
   handler: async (ctx, args) => {
     // Optional safety check: Verify the supplier exists
@@ -59,6 +60,7 @@ export const addItem = mutation({
         itemName: args.itemName,
         category: args.category,
         supplierId: args.supplierId,
+        searchField: args.itemName.toLowerCase(),
       });
     }
 
@@ -71,6 +73,7 @@ export const addItem = mutation({
 
       itemId: itemId,
       customerId: args.customerId,
+      searchField: args.itemName.toLowerCase(),
     });
 
     return { 
@@ -86,6 +89,7 @@ export const updateItem = mutation({
     itemId: v.id("lineItems"),
     invoiceId: v.optional(v.id("invoices")),
     customerId: v.id("customers"), 
+    supplierId: v.id("suppliers"), 
 
     sku: v.union(v.string(), v.null()),
     itemName: v.optional(v.string()),
@@ -97,7 +101,7 @@ export const updateItem = mutation({
   },
   handler: async (ctx, args) => {
     // Separate the itemId from the rest of the arguments
-    const { itemId, invoiceId, customerId, sku, itemName, category, quantity, quantityUnit, unitPrice } = args;
+    const { itemId, invoiceId, customerId, supplierId, sku, itemName, category, quantity, quantityUnit, unitPrice } = args;
 
     // Check if the line item exists first
     const existingLineItem = await ctx.db.get(args.itemId);
@@ -128,11 +132,12 @@ export const updateItem = mutation({
 
     // If the client sent any catalog fields (sku, itemName, category), 
     // update the parent 'items' table using existingLineItem.itemId
-    if (sku !== undefined || itemName !== undefined || category !== undefined) {
+    if (sku !== undefined || itemName !== undefined || category !== undefined || supplierId !== undefined) {
       const itemUpdates: Record<string, any> = {};
       if (sku !== undefined) itemUpdates.sku = sku;
       if (itemName !== undefined) itemUpdates.itemName = itemName;
       if (category !== undefined) itemUpdates.category = category;
+      if (supplierId !== undefined) itemUpdates.supplierId = supplierId;
 
       await ctx.db.patch(existingLineItem.itemId, itemUpdates);
     }
@@ -205,5 +210,28 @@ export const deleteItemWithLineItems = mutation({
       success: true, 
       message: `Deleted item and ${lineItems.length} associated line item(s).` 
     };
+  },
+});
+
+// Get Categories
+export const getDistinctCategories = query({
+  args: {},
+  handler: async () => {
+    const categories = {
+      "categories": [
+        "Meat & Poultry",
+        "Fish & Seafood",
+        "Fruits & Vegetables",
+        "Dairy & Eggs",
+        "Grains, Flour & Starches",
+        "Pantry & Condiments",
+        "Sweet & Baking Supplies",
+        "Beverages - Non-Alcoholic",
+        "Beverages - Alcoholic",
+        "Non-Food / Other"
+      ]
+    }
+
+    return categories;
   },
 });
