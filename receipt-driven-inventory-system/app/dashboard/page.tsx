@@ -1,23 +1,25 @@
 "use client";
 
 import Link from "next/link";
-import type { ComponentType, ReactNode } from "react";
+import { useMemo } from "react";
 import { useQuery } from "convex/react";
-import {
-  BoxesIcon,
-  ChevronRightIcon,
-  DownloadIcon,
-  ReceiptTextIcon,
-  ShieldAlertIcon,
-  WalletIcon,
-} from "lucide-react";
-import { cn } from "cn";
-
 import { api } from "@/convex/_generated/api";
-import { PageContainer } from "@/components/page-container";
-import { UploadReceipt } from "@/components/upload-receipt";
-import { Badge } from "@/components/ui/badge";
+
+import { cn } from "cn";
+import {
+  ALL,
+  DashboardSkeleton,
+  PageContainer,
+  RestrictedPage,
+  SectionHeader,
+  StatCard,
+  UploadInvoice,
+  useWorkspace,
+  WorkspaceSwitcher,
+} from "@/components/custom";
+import { InvoiceVolumeCard, StockDonutChart } from "@/components/charts";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -26,6 +28,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+
+import {
+  BoxesIcon,
+  ChevronRightIcon,
+  DownloadIcon,
+  ReceiptTextIcon,
+  ShieldAlertIcon,
+  WalletIcon,
+} from "lucide-react";
 
 const STATS = [
   {
@@ -51,62 +62,6 @@ const STATS = [
     value: "3",
     hint: "Flagged lines need a person",
     icon: ShieldAlertIcon,
-  },
-];
-
-const STOCK_LEVELS = [
-  { category: "Produce", units: 420 },
-  { category: "Dairy & eggs", units: 310 },
-  { category: "Meat & poultry", units: 285 },
-  { category: "Dry goods", units: 180 },
-  { category: "Beverages", units: 145 },
-];
-
-const TOTAL_UNITS = STOCK_LEVELS.reduce((sum, level) => sum + level.units, 0);
-const MAX_UNITS = Math.max(...STOCK_LEVELS.map((level) => level.units));
-
-const LATEST_ITEMS = [
-  {
-    itemName: "Norwegian Salmon Filet",
-    category: "Meat & poultry",
-    supplierName: "BAMA Storkjøkken Oslo",
-    received: "08.10.2026",
-    quantity: "72 kg",
-  },
-  {
-    itemName: "Roma Tomatoes",
-    category: "Produce",
-    supplierName: "BAMA Storkjøkken Oslo",
-    received: "08.10.2026",
-    quantity: "48 case",
-  },
-  {
-    itemName: "Fresh Mozzarella",
-    category: "Dairy & eggs",
-    supplierName: "BAMA Storkjøkken Oslo",
-    received: "07.10.2026",
-    quantity: "36 kg",
-  },
-  {
-    itemName: "Extra Virgin Olive Oil",
-    category: "Dry goods",
-    supplierName: "BAMA Storkjøkken Oslo",
-    received: "07.10.2026",
-    quantity: "24 btl",
-  },
-  {
-    itemName: "Chicken Breast",
-    category: "Meat & poultry",
-    supplierName: "BAMA Storkjøkken Oslo",
-    received: "06.10.2026",
-    quantity: "40 kg",
-  },
-  {
-    itemName: "Sparkling Water",
-    category: "Beverages",
-    supplierName: "BAMA Storkjøkken Oslo",
-    received: "06.10.2026",
-    quantity: "12 case",
   },
 ];
 
@@ -154,55 +109,100 @@ const REVIEW_TASKS = [
   { orderId: "2026/181220", reason: "New supplier", date: "08.10.2026" },
 ];
 
-const HEADER_CELL =
-  "h-10 text-xs font-medium tracking-wide text-muted-foreground uppercase";
+const HEADER_CELL = "h-10 text-xs font-medium tracking-wide text-muted-foreground uppercase";
 
-function StatCard({
-  label,
-  value,
-  hint,
-  icon: Icon,
-}: {
-  label: string;
-  value: string;
-  hint: ReactNode;
-  icon: ComponentType<{ className?: string }>;
-}) {
-  return (
-    <div className="rounded-xl bg-card p-5 ring-1 ring-foreground/10">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex flex-col gap-1">
-          <p className="text-sm text-muted-foreground">{label}</p>
-          <p className="text-2xl font-semibold tracking-tight tabular-nums">
-            {value}
-          </p>
-        </div>
-        <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted text-foreground ring-1 ring-border/60">
-          <Icon className="size-4" />
-        </span>
-      </div>
-      <p className="mt-4 text-xs text-muted-foreground">{hint}</p>
-    </div>
-  );
+const DASH = "—";
+
+/** Render a timestamp as dd.MM.yyyy, matching the dates used across the app. */
+function formatDate(timestamp: number) {
+  const date = new Date(timestamp);
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  return `${day}.${month}.${date.getFullYear()}`;
 }
 
-function SectionHeader({
-  title,
-  description,
-  action,
-}: {
-  title: string;
-  description: string;
-  action?: ReactNode;
-}) {
+function formatQuantity(quantity: number | null, unit: string | null) {
+  if (quantity === null) return DASH;
+  return unit ? `${quantity} ${unit}` : `${quantity}`;
+}
+
+/**
+ * Preview of the newest line items. Kept as its own component so the query
+ * only runs for signed-in users, after the auth check above.
+ */
+function LatestItemsTable() {
+  const { workspace } = useWorkspace();
+  const latestItemArgs = useMemo<{ customerName?: string }>(
+    () => (workspace === ALL ? {} : { customerName: workspace }),
+    [workspace],
+  );
+  const latestItems = useQuery(
+    api.inventory.inventory.listLatestItems,
+    latestItemArgs,
+  );
+
   return (
-    <div className="flex items-start justify-between gap-4 border-b border-border/60 px-5 py-4">
-      <div className="flex flex-col gap-0.5">
-        <h2 className="text-sm font-medium">{title}</h2>
-        <p className="text-xs text-muted-foreground">{description}</p>
-      </div>
-      {action}
-    </div>
+    <Table className="[&_td]:px-5 [&_td]:py-3 [&_th]:px-5">
+      <TableHeader className="bg-muted/40">
+        <TableRow className="hover:bg-transparent">
+          <TableHead className={HEADER_CELL}>Item</TableHead>
+          <TableHead className={HEADER_CELL}>Supplier</TableHead>
+          <TableHead className={HEADER_CELL}>Received</TableHead>
+          <TableHead className={cn(HEADER_CELL, "text-right")}>
+            Quantity
+          </TableHead>
+        </TableRow>
+      </TableHeader>
+
+      <TableBody>
+        {latestItems === undefined &&
+          Array.from({ length: 6 }, (_, index) => (
+            <TableRow key={index} className="hover:bg-transparent">
+              <TableCell>
+                <Skeleton className="h-4 w-40" />
+              </TableCell>
+              <TableCell>
+                <Skeleton className="h-4 w-32" />
+              </TableCell>
+              <TableCell>
+                <Skeleton className="h-4 w-20" />
+              </TableCell>
+              <TableCell className="text-right">
+                <Skeleton className="ml-auto h-4 w-14" />
+              </TableCell>
+            </TableRow>
+          ))}
+
+        {latestItems?.length === 0 && (
+          <TableRow className="hover:bg-transparent">
+            <TableCell colSpan={4}>
+              <p className="py-8 text-center text-sm text-muted-foreground">
+                {workspace === ALL
+                  ? "No items yet. Upload a receipt to get started."
+                  : `No items in ${workspace} yet.`}
+              </p>
+            </TableCell>
+          </TableRow>
+        )}
+
+        {latestItems?.map((line) => (
+          <TableRow key={line._id}>
+            <TableCell className="font-medium">
+              {line.item?.itemName ?? "Unknown item"}
+            </TableCell>
+            <TableCell className="text-muted-foreground">
+              {line.supplierName ?? DASH}
+            </TableCell>
+            <TableCell className="text-muted-foreground tabular-nums">
+              {formatDate(line._creationTime)}
+            </TableCell>
+            <TableCell className="text-right font-medium tabular-nums">
+              {formatQuantity(line.quantity, line.quantityUnit)}
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
   );
 }
 
@@ -212,21 +212,14 @@ const Page = () => {
   if (user === undefined) {
     return (
       <PageContainer>
-        <p className="text-sm text-muted-foreground">Loading overview…</p>
+        <DashboardSkeleton />
       </PageContainer>
     );
   }
 
   if (user === null) {
     return (
-      <PageContainer>
-        <div className="rounded-xl bg-card px-6 py-16 text-center ring-1 ring-foreground/10">
-          <p className="font-medium">You need to sign in</p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            The overview is only available to signed-in accounts.
-          </p>
-        </div>
-      </PageContainer>
+      <RestrictedPage content="The dashboard" />
     );
   }
 
@@ -243,11 +236,12 @@ const Page = () => {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
+            <WorkspaceSwitcher />
             <Button variant="outline">
               <DownloadIcon />
               Export
             </Button>
-            <UploadReceipt label="Upload receipt" />
+            <UploadInvoice label="Upload receipt" />
           </div>
         </div>
 
@@ -261,36 +255,22 @@ const Page = () => {
           <div className="flex min-w-0 flex-col gap-6 lg:col-span-2">
             <div className="rounded-xl bg-card ring-1 ring-foreground/10">
               <SectionHeader
-                title="Stock levels by category"
-                description="On-hand units across your tracked items."
+                title="Stock by category"
+                description="Tracked items and receipt cost, grouped by category."
                 action={
-                  <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
-                    {TOTAL_UNITS} units
-                  </span>
+                  <Link
+                    href="/inventory"
+                    className="shrink-0 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    View inventory
+                  </Link>
                 }
               />
 
-              <div className="flex flex-col gap-4 px-5 py-5">
-                {STOCK_LEVELS.map((level) => (
-                  <div key={level.category} className="flex flex-col gap-1.5">
-                    <div className="flex items-baseline justify-between gap-4 text-sm">
-                      <span className="font-medium">{level.category}</span>
-                      <span className="text-muted-foreground tabular-nums">
-                        {level.units}
-                      </span>
-                    </div>
-                    <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-                      <div
-                        className="h-full rounded-full bg-primary transition-[width]"
-                        style={{
-                          width: `${(level.units / MAX_UNITS) * 100}%`,
-                        }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <StockDonutChart />
             </div>
+
+            <InvoiceVolumeCard />
 
             <div className="overflow-hidden rounded-xl bg-card ring-1 ring-foreground/10">
               <SectionHeader
@@ -306,46 +286,7 @@ const Page = () => {
                 }
               />
 
-              <Table className="[&_td]:px-5 [&_td]:py-3 [&_th]:px-5">
-                <TableHeader className="bg-muted/40">
-                  <TableRow className="hover:bg-transparent">
-                    <TableHead className={HEADER_CELL}>Item</TableHead>
-                    <TableHead className={HEADER_CELL}>Category</TableHead>
-                    <TableHead className={HEADER_CELL}>Supplier</TableHead>
-                    <TableHead className={HEADER_CELL}>Received</TableHead>
-                    <TableHead className={cn(HEADER_CELL, "text-right")}>
-                      Quantity
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-
-                <TableBody>
-                  {LATEST_ITEMS.map((item) => (
-                    <TableRow key={item.itemName}>
-                      <TableCell className="font-medium">
-                        {item.itemName}
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant="outline"
-                          className="text-muted-foreground"
-                        >
-                          {item.category}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {item.supplierName}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground tabular-nums">
-                        {item.received}
-                      </TableCell>
-                      <TableCell className="text-right font-medium tabular-nums">
-                        {item.quantity}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+              <LatestItemsTable />
             </div>
           </div>
 
