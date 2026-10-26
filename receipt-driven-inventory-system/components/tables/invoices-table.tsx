@@ -10,19 +10,17 @@ import {
 import { cn } from "cn";
 
 import {
-  ALL,
   DatePicker,
   DeleteDialog,
   FilterSelect,
   FilterSheet,
   SearchInput,
   Sort,
-  TablePagination,
   uniqueValues,
-  useTablePagination,
   useWorkspace,
   type SortOption,
 } from "@/components/custom";
+import { TablePagination, useTablePagination } from "@/components/tables";
 import { Button } from "@/components/ui/button";
 import {
   Collapsible,
@@ -36,8 +34,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { api } from "@/convex/_generated/api";
-import { useQuery } from "convex/react";
+import { ALL } from "../util/functions";
 
 export type Invoice = {
   orderId: string;
@@ -143,14 +140,13 @@ export function InvoicesTable({ invoices, setInvoices }: InvoicesTableProps) {
       (filters.supplier === ALL || invoice.supplierName === filters.supplier) &&
       (!date || dateValue(invoice.orderDate) === dateKey(date)),
   );
-  const activeFilterCount =
-    (filters.supplier === ALL ? 0 : 1) + (date ? 1 : 0);
+  const activeFilterCount = (filters.supplier === ALL ? 0 : 1) + (date ? 1 : 0);
   const filtersActive = activeFilterCount > 0;
 
   const sortedInvoices = [...filteredInvoices].sort(SORTERS[sort]);
   const { page, pageCount, visibleRows, firstRow, lastRow, goToPage } =
     useTablePagination(sortedInvoices, PAGE_SIZE);
-  
+
   const changeSort = (next: SortKey) => {
     setSort(next);
     goToPage(1);

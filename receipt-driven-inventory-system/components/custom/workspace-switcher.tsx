@@ -17,10 +17,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-import { ALL } from "./filter";
+import { ALL } from "../util/functions";
 import { useWorkspace } from "./workspace";
-
-const ALL_CUSTOMERS = "All customers";
 
 /**
  * Customer switcher styled like a workspace picker. The selection is shared
@@ -28,7 +26,7 @@ const ALL_CUSTOMERS = "All customers";
  */
 export function WorkspaceSwitcher() {
   const { workspace, workspaces, setWorkspace } = useWorkspace();
-  const currentLabel = workspace === ALL ? ALL_CUSTOMERS : workspace;
+  const currentLabel = workspace === ALL ? "All customers" : workspace;
 
   return (
     <DropdownMenu>
@@ -52,7 +50,7 @@ export function WorkspaceSwitcher() {
         <DropdownMenuGroup>
           <DropdownMenuLabel>Workspaces</DropdownMenuLabel>
           <DropdownMenuItem onClick={() => setWorkspace(ALL)}>
-            <span className="flex-1 truncate">{ALL_CUSTOMERS}</span>
+            <span className="flex-1 truncate">All customers</span>
             {workspace === ALL && <CheckIcon />}
           </DropdownMenuItem>
         </DropdownMenuGroup>

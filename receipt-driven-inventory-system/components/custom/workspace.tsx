@@ -11,7 +11,7 @@ import {
 import { useQuery } from "convex/react";
 
 import { api } from "@/convex/_generated/api";
-import { ALL } from "./filter";
+import { ALL } from "../util/functions";
 
 const STORAGE_KEY = "receipt-driven-inventory:workspace";
 

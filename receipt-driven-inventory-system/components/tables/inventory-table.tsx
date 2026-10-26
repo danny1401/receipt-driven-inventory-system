@@ -6,15 +6,8 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import {
-  ALL,
   DeleteDialog,
-  FilterSelect,
-  FilterSheet,
-  SearchInput,
-  Sort,
-  TablePagination,
   uniqueValues,
-  useTablePagination,
   useWorkspace,
   type SortOption,
 } from "@/components/custom";
@@ -28,7 +21,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { InventoryToolbar, InventoryRowActions } from "@/components/tables";
+import {
+  InventoryToolbar,
+  InventoryRowActions,
+  TablePagination,
+  useTablePagination,
+} from "@/components/tables";
+import { ALL } from "@/components/util/functions";
 
 /** One line item, flattened with the names the table displays. */
 export type InventoryRow = {
@@ -44,12 +43,8 @@ export type InventoryRow = {
   createdAt: number;
 };
 
-const HEADER_CELL =
-  "h-11 text-xs font-medium tracking-wide text-muted-foreground uppercase";
-
 const PAGE_SIZE = 10;
 const COLUMN_COUNT = 6;
-const DASH = "—";
 
 type SortKey =
   | "name-asc"
@@ -87,14 +82,14 @@ const EMPTY_FILTERS: Filters = {
 };
 
 function formatQuantity(row: InventoryRow) {
-  if (row.quantity === null) return DASH;
+  if (row.quantity === null) return "—";
   return row.quantityUnit
     ? `${row.quantity} ${row.quantityUnit}`
     : `${row.quantity}`;
 }
 
 function formatMoney(value: number | null) {
-  return value === null ? DASH : `${value.toFixed(2)} kr`;
+  return value === null ? "—" : `${value.toFixed(2)} kr`;
 }
 
 export function InventoryTable() {
@@ -125,9 +120,9 @@ export function InventoryTable() {
     () =>
       (inventory ?? []).map<InventoryRow>((line) => ({
         id: line._id,
-        supplierName: line.supplierName ?? DASH,
+        supplierName: line.supplierName ?? "—",
         itemName: line.item?.itemName ?? "Unknown item",
-        category: line.item?.category ?? DASH,
+        category: line.item?.category ?? "—",
         quantity: line.quantity,
         quantityUnit: line.quantityUnit,
         unitPrice: line.unitPrice,
@@ -223,16 +218,16 @@ export function InventoryTable() {
             <Table className="w-full [&_td]:px-4 [&_td]:py-3 [&_th]:px-4">
               <TableHeader className="bg-muted/40 sticky top-0 z-10">
                 <TableRow className="hover:bg-transparent">
-                  <TableHead className={HEADER_CELL}>Item</TableHead>
-                  <TableHead className={HEADER_CELL}>Category</TableHead>
-                  <TableHead className={HEADER_CELL}>Supplier</TableHead>
-                  <TableHead className={`${HEADER_CELL} text-right`}>
+                  <TableHead className="header-cell">Item</TableHead>
+                  <TableHead className="header-cell">Category</TableHead>
+                  <TableHead className="header-cell">Supplier</TableHead>
+                  <TableHead className="header-cell text-right">
                     Quantity
                   </TableHead>
-                  <TableHead className={`${HEADER_CELL} text-right`}>
+                  <TableHead className="header-cell text-right">
                     Amount
                   </TableHead>
-                  <TableHead className={`${HEADER_CELL} w-[52px]`} />
+                  <TableHead className="header-cell w-[52px]" />
                 </TableRow>
               </TableHeader>
 

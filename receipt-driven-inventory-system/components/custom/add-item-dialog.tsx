@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 
-import { ALL } from "./filter";
+import { ALL } from "../util/functions";
 import { useWorkspace } from "./workspace";
 
 type FormValues = {
@@ -63,13 +63,24 @@ function describeError(error: unknown) {
   );
 }
 
-export function AddItemDialog() {
-  const [open, setOpen] = useState(false);
+interface AddItemDialogProps {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}
+
+export function AddItemDialog({
+  open: externalOpen,
+  onOpenChange: externalOnOpenChange,
+}: AddItemDialogProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
   const [form, setForm] = useState<FormValues>(EMPTY_FORM);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const { workspace } = useWorkspace();
+
+  const isOpen = externalOpen ?? internalOpen;
+  const setIsOpen = externalOnOpenChange ?? setInternalOpen;
 
   const options = useQuery(api.inventory.helpers.getItemFormOptions);
   const ensureSupplier = useMutation(api.inventory.helpers.ensureSupplier);
@@ -174,7 +185,7 @@ export function AddItemDialog() {
         searchField: values.itemName.toLowerCase(),
       });
 
-      setOpen(false);
+      setIsOpen(false);
     } catch (error) {
       setFormError(describeError(error));
     } finally {
@@ -184,14 +195,12 @@ export function AddItemDialog() {
 
   return (
     <Dialog
-      open={open}
+      open={isOpen}
       onOpenChange={(next) => {
-        setOpen(next);
+        setIsOpen(next);
         if (next) resetForm();
       }}
     >
-      <DialogTrigger>Add Item</DialogTrigger>
-
       <DialogContent className="max-h-[calc(100svh-2rem)] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Add item</DialogTitle>

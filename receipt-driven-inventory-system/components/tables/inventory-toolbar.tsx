@@ -42,16 +42,15 @@ export function InventoryToolbar({
   return (
     <div className="flex flex-col gap-3 border-b border-border/60 p-4 sm:flex-row sm:items-center sm:justify-between">
       <SearchInput value={search} onValueChange={onSearchChange} />
+      <span className="mr-auto text-xs text-muted-foreground">
+        {isLoading
+          ? "Loading items…"
+          : isNarrowed
+            ? `${filteredCount} items`
+            : `${totalCount} items`}
+      </span>
 
       <div className="flex flex-wrap items-center gap-2">
-        <span className="mr-auto text-xs text-muted-foreground">
-          {isLoading
-            ? "Loading items…"
-            : isNarrowed
-              ? `${filteredCount} of ${totalCount} items`
-              : `${totalCount} items`}
-        </span>
-
         <FilterSheet
           activeCount={activeFilterCount}
           onClear={onClearFilters}

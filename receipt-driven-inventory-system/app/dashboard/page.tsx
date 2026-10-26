@@ -1,42 +1,30 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 
 import { cn } from "cn";
 import {
-  ALL,
   DashboardSkeleton,
   PageContainer,
+  PageHeader,
   RestrictedPage,
   SectionHeader,
   StatCard,
-  UploadInvoice,
   useWorkspace,
-  WorkspaceSwitcher,
 } from "@/components/custom";
 import { InvoiceVolumeCard, StockDonutChart } from "@/components/charts";
-import { Button, buttonVariants } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { buttonVariants } from "@/components/ui/button";
 
 import {
   BoxesIcon,
   ChevronRightIcon,
-  DownloadIcon,
   ReceiptTextIcon,
   ShieldAlertIcon,
   WalletIcon,
 } from "lucide-react";
+import { LatestItemsTable } from "@/components/tables/dashboard-latest-table";
 
 const STATS = [
   {
@@ -109,103 +97,6 @@ const REVIEW_TASKS = [
   { orderId: "2026/181220", reason: "New supplier", date: "08.10.2026" },
 ];
 
-const HEADER_CELL = "h-10 text-xs font-medium tracking-wide text-muted-foreground uppercase";
-
-const DASH = "—";
-
-/** Render a timestamp as dd.MM.yyyy, matching the dates used across the app. */
-function formatDate(timestamp: number) {
-  const date = new Date(timestamp);
-  const day = String(date.getDate()).padStart(2, "0");
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  return `${day}.${month}.${date.getFullYear()}`;
-}
-
-function formatQuantity(quantity: number | null, unit: string | null) {
-  if (quantity === null) return DASH;
-  return unit ? `${quantity} ${unit}` : `${quantity}`;
-}
-
-/**
- * Preview of the newest line items. Kept as its own component so the query
- * only runs for signed-in users, after the auth check above.
- */
-function LatestItemsTable() {
-  const { workspace } = useWorkspace();
-  const latestItemArgs = useMemo<{ customerName?: string }>(
-    () => (workspace === ALL ? {} : { customerName: workspace }),
-    [workspace],
-  );
-  const latestItems = useQuery(
-    api.inventory.inventory.listLatestItems,
-    latestItemArgs,
-  );
-
-  return (
-    <Table className="[&_td]:px-5 [&_td]:py-3 [&_th]:px-5">
-      <TableHeader className="bg-muted/40">
-        <TableRow className="hover:bg-transparent">
-          <TableHead className={HEADER_CELL}>Item</TableHead>
-          <TableHead className={HEADER_CELL}>Supplier</TableHead>
-          <TableHead className={HEADER_CELL}>Received</TableHead>
-          <TableHead className={cn(HEADER_CELL, "text-right")}>
-            Quantity
-          </TableHead>
-        </TableRow>
-      </TableHeader>
-
-      <TableBody>
-        {latestItems === undefined &&
-          Array.from({ length: 6 }, (_, index) => (
-            <TableRow key={index} className="hover:bg-transparent">
-              <TableCell>
-                <Skeleton className="h-4 w-40" />
-              </TableCell>
-              <TableCell>
-                <Skeleton className="h-4 w-32" />
-              </TableCell>
-              <TableCell>
-                <Skeleton className="h-4 w-20" />
-              </TableCell>
-              <TableCell className="text-right">
-                <Skeleton className="ml-auto h-4 w-14" />
-              </TableCell>
-            </TableRow>
-          ))}
-
-        {latestItems?.length === 0 && (
-          <TableRow className="hover:bg-transparent">
-            <TableCell colSpan={4}>
-              <p className="py-8 text-center text-sm text-muted-foreground">
-                {workspace === ALL
-                  ? "No items yet. Upload a receipt to get started."
-                  : `No items in ${workspace} yet.`}
-              </p>
-            </TableCell>
-          </TableRow>
-        )}
-
-        {latestItems?.map((line) => (
-          <TableRow key={line._id}>
-            <TableCell className="font-medium">
-              {line.item?.itemName ?? "Unknown item"}
-            </TableCell>
-            <TableCell className="text-muted-foreground">
-              {line.supplierName ?? DASH}
-            </TableCell>
-            <TableCell className="text-muted-foreground tabular-nums">
-              {formatDate(line._creationTime)}
-            </TableCell>
-            <TableCell className="text-right font-medium tabular-nums">
-              {formatQuantity(line.quantity, line.quantityUnit)}
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
-  );
-}
-
 const Page = () => {
   const user = useQuery(api.auth.getCurrentUser);
 
@@ -218,32 +109,13 @@ const Page = () => {
   }
 
   if (user === null) {
-    return (
-      <RestrictedPage content="The dashboard" />
-    );
+    return <RestrictedPage content="The dashboard" />;
   }
 
   return (
     <PageContainer>
       <div className="flex flex-col gap-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div className="flex flex-col gap-1.5">
-            <h1 className="text-2xl font-semibold tracking-tight">Overview</h1>
-            <p className="text-sm text-muted-foreground">
-              A snapshot of this month&rsquo;s receipts, stock, and open
-              reviews.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            <WorkspaceSwitcher />
-            <Button variant="outline">
-              <DownloadIcon />
-              Export
-            </Button>
-            <UploadInvoice label="Upload receipt" />
-          </div>
-        </div>
+        <PageHeader content="dashboard" />
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {STATS.map((stat) => (
@@ -285,7 +157,6 @@ const Page = () => {
                   </Link>
                 }
               />
-
               <LatestItemsTable />
             </div>
           </div>

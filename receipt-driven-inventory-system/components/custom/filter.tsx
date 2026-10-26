@@ -11,9 +11,7 @@ import {
   SelectLabel,
   SelectTrigger,
 } from "@/components/ui/select";
-
-/** Sentinel for “no filter” in every filter menu. */
-export const ALL = "all";
+import { ALL } from "../util/functions";
 
 /** Distinct values of one column, alphabetised, for a filter menu. */
 export function uniqueValues<T>(rows: T[], pick: (row: T) => string) {

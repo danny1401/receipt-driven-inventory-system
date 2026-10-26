@@ -54,11 +54,20 @@ function formatFileSize(bytes: number) {
 }
 
 function validateFile(file: File): string | null {
-  const allowedTypes = ["application/pdf", "image/png", "image/jpeg", "image/jpg", "image/heic", "image/heif"];
+  const allowedTypes = [
+    "application/pdf",
+    "image/png",
+    "image/jpeg",
+    "image/jpg",
+    "image/heic",
+    "image/heif",
+  ];
   const allowedExts = [".pdf", ".png", ".jpg", ".jpeg", ".heic", ".heif"];
-  
+
   const fileName = file.name.toLowerCase();
-  const isValid = allowedTypes.includes(file.type) || allowedExts.some(ext => fileName.endsWith(ext));
+  const isValid =
+    allowedTypes.includes(file.type) ||
+    allowedExts.some((ext) => fileName.endsWith(ext));
 
   if (!isValid) return "Only PDF and image files are supported.";
   if (file.size > MAX_FILE_SIZE) return "File is larger than 10 MB.";
@@ -85,24 +94,29 @@ function describeEntry(entry: UploadEntry) {
   }
 }
 
-export function UploadInvoice({
-  label = "Upload invoice",
-  onUpload,
-}: {
-  label?: string;
-  /**
-   * Replace the simulated upload with a real one (e.g. Convex storage).
-   * The entry is marked "processing" while this resolves, then "done".
-   */
+interface UploadInvoiceProps {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
   onUpload?: (file: File) => Promise<void> | void;
-}) {
-  const [open, setOpen] = useState(false);
+}
+
+export function UploadInvoice({
+  open: externalOpen,
+  onOpenChange: externalOnOpenChange,
+  onUpload,
+}: UploadInvoiceProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
   const [entries, setEntries] = useState<UploadEntry[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const dragDepth = useRef(0);
   const router = useRouter();
 
-  const generateUploadUrl = useMutation(api.inventory.invoices.generateUploadUrl);
+  const isOpen = externalOpen ?? internalOpen;
+  const setIsOpen = externalOnOpenChange ?? setInternalOpen;
+
+  const generateUploadUrl = useMutation(
+    api.inventory.invoices.generateUploadUrl,
+  );
   const uploadInvoice = useMutation(api.inventory.invoices.uploadInvoice);
 
   const pendingCount = entries.filter(
@@ -111,7 +125,9 @@ export function UploadInvoice({
 
   const updateEntry = (id: string, patch: Partial<UploadEntry>) => {
     setEntries((current) =>
-      current.map((entry) => (entry.id === id ? { ...entry, ...patch } : entry)),
+      current.map((entry) =>
+        entry.id === id ? { ...entry, ...patch } : entry,
+      ),
     );
   };
 
@@ -235,9 +251,9 @@ export function UploadInvoice({
 
   return (
     <Dialog
-      open={open}
+      open={isOpen}
       onOpenChange={(next) => {
-        setOpen(next);
+        setIsOpen(next);
         if (!next) {
           setEntries([]);
           setIsDragging(false);
@@ -245,18 +261,9 @@ export function UploadInvoice({
         }
       }}
     >
-      <DialogTrigger
-        render={
-          <Button>
-            <UploadIcon />
-            {label}
-          </Button>
-        }
-      />
-
       <DialogContent className="max-h-[calc(100svh-2rem)] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>{label}</DialogTitle>
+          <DialogTitle>Upload invoice</DialogTitle>
           <DialogDescription>
             Drag and drop a supplier invoice as a PDF or image, or browse your
             files.
@@ -305,8 +312,7 @@ export function UploadInvoice({
           <div className="flex max-h-64 flex-col gap-2 overflow-y-auto">
             {entries.map((entry) => {
               const isBusy =
-                entry.status === "uploading" ||
-                entry.status === "processing";
+                entry.status === "uploading" || entry.status === "processing";
 
               return (
                 <Attachment
