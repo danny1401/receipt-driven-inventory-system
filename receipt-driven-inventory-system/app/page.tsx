@@ -6,7 +6,7 @@ import {
   HowItWorks,
   Value,
 } from "@/components/landing";
-import { Footer } from "@/components/ui";
+import { FooterDescription } from "@/components/custom";
 
 export default function LandingPage() {
   return (
@@ -17,7 +17,7 @@ export default function LandingPage() {
       <Value />
       <FAQ />
       <CTA />
-      <Footer utility={true} />
+      <FooterDescription />
     </>
   );
 }

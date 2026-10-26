@@ -1,13 +1,15 @@
 import type { Metadata } from "next";
 
 import { ConvexClientProvider } from "@/components/ConvexClientProvider";
+import { ThemeProvider } from "@/components/theme-provider";
 import { api } from "@/convex/_generated/api";
 import { getToken } from "@/lib/authServer";
 import { preloadAuthQuery } from "@/lib/authServer";
 
 import { Geist, Geist_Mono } from "next/font/google";
+import { Footer, Header, WorkspaceProvider } from "../components/custom";
+import { Toaster } from "@/components/ui/toast";
 import "./globals.css";
-import { Header } from "../components/ui";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -42,12 +44,19 @@ export default async function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable}`}
     >
       <body>
-        <ConvexClientProvider initialToken={token}>
-          <div className="flex min-h-svh flex-col">
-            <Header preloadedUserQuery={preloadedUserQuery} />
-            <main className="flex-1">{children}</main>
-          </div>
-        </ConvexClientProvider>
+        <ThemeProvider>
+          <Toaster>
+            <ConvexClientProvider initialToken={token}>
+              <WorkspaceProvider>
+                <div className="flex flex-col min-h-svh">
+                  <Header preloadedUserQuery={preloadedUserQuery} />
+                  <main className="flex-1 flex flex-col">{children}</main>
+                  <Footer />
+                </div>
+              </WorkspaceProvider>
+            </ConvexClientProvider>
+          </Toaster>
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -6,7 +6,6 @@ import {
   ExternalLinkIcon,
   FileTextIcon,
   MoreHorizontalIcon,
-  SearchIcon,
 } from "lucide-react";
 import { cn } from "cn";
 
@@ -15,10 +14,13 @@ import {
   DatePicker,
   DeleteDialog,
   FilterSelect,
+  FilterSheet,
+  SearchInput,
   Sort,
   TablePagination,
   uniqueValues,
   useTablePagination,
+  useWorkspace,
   type SortOption,
 } from "@/components/custom";
 import { Button } from "@/components/ui/button";
@@ -34,7 +36,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
+import { api } from "@/convex/_generated/api";
+import { useQuery } from "convex/react";
 
 export type Invoice = {
   orderId: string;
@@ -105,12 +108,11 @@ const SORTERS: Record<SortKey, (a: Invoice, b: Invoice) => number> = {
   "date-asc": (a, b) => dateValue(a.orderDate) - dateValue(b.orderDate),
 };
 
-type FilterKey = "customer" | "supplier";
+type FilterKey = "supplier";
 
 type Filters = Record<FilterKey, string>;
 
 const EMPTY_FILTERS: Filters = {
-  customer: ALL,
   supplier: ALL,
 };
 
@@ -125,25 +127,30 @@ export function InvoicesTable({ invoices, setInvoices }: InvoicesTableProps) {
   const [sort, setSort] = useState<SortKey>("name-asc");
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
   const [date, setDate] = useState<Date | undefined>(undefined);
+  const { workspace } = useWorkspace();
+
+  const scopedInvoices =
+    workspace === ALL
+      ? invoices
+      : invoices.filter((invoice) => invoice.customerName === workspace);
 
   const filterOptions = {
-    customer: uniqueValues(invoices, (invoice) => invoice.customerName),
-    supplier: uniqueValues(invoices, (invoice) => invoice.supplierName),
+    supplier: uniqueValues(scopedInvoices, (invoice) => invoice.supplierName),
   };
 
-  const filteredInvoices = invoices.filter(
+  const filteredInvoices = scopedInvoices.filter(
     (invoice) =>
-      (filters.customer === ALL || invoice.customerName === filters.customer) &&
       (filters.supplier === ALL || invoice.supplierName === filters.supplier) &&
       (!date || dateValue(invoice.orderDate) === dateKey(date)),
   );
-  const filtersActive =
-    date !== undefined || Object.values(filters).some((value) => value !== ALL);
+  const activeFilterCount =
+    (filters.supplier === ALL ? 0 : 1) + (date ? 1 : 0);
+  const filtersActive = activeFilterCount > 0;
 
   const sortedInvoices = [...filteredInvoices].sort(SORTERS[sort]);
   const { page, pageCount, visibleRows, firstRow, lastRow, goToPage } =
     useTablePagination(sortedInvoices, PAGE_SIZE);
-
+  
   const changeSort = (next: SortKey) => {
     setSort(next);
     goToPage(1);
@@ -159,6 +166,12 @@ export function InvoicesTable({ invoices, setInvoices }: InvoicesTableProps) {
     goToPage(1);
   };
 
+  const clearFilters = () => {
+    setFilters(EMPTY_FILTERS);
+    setDate(undefined);
+    goToPage(1);
+  };
+
   const lineItemCount = filteredInvoices.reduce(
     (sum, invoice) => sum + invoice.orderItems.length,
     0,
@@ -171,49 +184,44 @@ export function InvoicesTable({ invoices, setInvoices }: InvoicesTableProps) {
     <>
       <div className="overflow-hidden rounded-xl bg-card ring-1 ring-foreground/10">
         <div className="flex flex-col gap-3 border-b border-border/60 p-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="relative w-full sm:min-w-0 sm:max-w-xs sm:flex-1">
-            <SearchIcon className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Search invoices, suppliers…"
-              aria-label="Search invoices"
-              className="h-9 pl-8"
-            />
-          </div>
+          <SearchInput />
 
           <div className="flex flex-wrap items-center gap-2">
             <span className="mr-auto text-xs text-muted-foreground">
               {filtersActive
-                ? `${filteredInvoices.length} of ${invoices.length} invoices`
-                : `${invoices.length} invoices`}
+                ? `${filteredInvoices.length} of ${scopedInvoices.length} invoices`
+                : `${scopedInvoices.length} invoices`}
             </span>
 
-            <FilterSelect
-              label="Customer"
-              value={filters.customer}
-              options={filterOptions.customer}
-              onChange={(value) => changeFilter("customer", value)}
-            />
+            <FilterSheet
+              activeCount={activeFilterCount}
+              onClear={clearFilters}
+              description="Filter the invoices by supplier or date, and choose a sort order."
+            >
+              <FilterSelect
+                label="Supplier"
+                value={filters.supplier}
+                options={filterOptions.supplier}
+                onChange={(value) => changeFilter("supplier", value)}
+                fullWidth
+                contentClassName="w-(--anchor-width)"
+              />
 
-            <FilterSelect
-              label="Supplier"
-              value={filters.supplier}
-              options={filterOptions.supplier}
-              onChange={(value) => changeFilter("supplier", value)}
-            />
+              <DatePicker
+                date={date}
+                onDateChange={changeDate}
+                placeholder="Invoice date"
+                clearable
+                className="w-full"
+              />
 
-            <DatePicker
-              date={date}
-              onDateChange={changeDate}
-              placeholder="Date"
-              clearable
-            />
-
-            <Sort
-              value={sort}
-              onValueChange={changeSort}
-              options={SORT_OPTIONS}
-            />
+              <Sort
+                value={sort}
+                onValueChange={changeSort}
+                options={SORT_OPTIONS}
+                className="w-full justify-start"
+              />
+            </FilterSheet>
           </div>
         </div>
 
@@ -237,7 +245,11 @@ export function InvoicesTable({ invoices, setInvoices }: InvoicesTableProps) {
             <div className="divide-y divide-border/60">
               {visibleRows.length === 0 && (
                 <div className="px-4 py-12 text-center text-sm text-muted-foreground">
-                  No invoices match these filters.
+                  {scopedInvoices.length === 0
+                    ? workspace === ALL
+                      ? "No invoices yet. Upload an invoice to get started."
+                      : `No invoices in ${workspace} yet.`
+                    : "No invoices match these filters."}
                 </div>
               )}
 

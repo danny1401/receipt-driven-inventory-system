@@ -1,10 +1,12 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { api } from "@/convex/_generated/api";
 import { useMutation } from "convex/react";
 
 import { cn } from "cn";
+import { toast } from "@/components/ui/toast";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -33,7 +35,6 @@ import {
   UploadIcon,
   XIcon,
 } from "lucide-react";
-import { generateUploadUrl } from "@/convex/functions";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
@@ -99,9 +100,10 @@ export function UploadInvoice({
   const [entries, setEntries] = useState<UploadEntry[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const dragDepth = useRef(0);
+  const router = useRouter();
 
-  const generateUploadUrl = useMutation(api.functions.generateUploadUrl);
-  const uploadInvoice = useMutation(api.functions.uploadInvoice);
+  const generateUploadUrl = useMutation(api.inventory.invoices.generateUploadUrl);
+  const uploadInvoice = useMutation(api.inventory.invoices.uploadInvoice);
 
   const pendingCount = entries.filter(
     (entry) => entry.status === "idle",
@@ -166,6 +168,31 @@ export function UploadInvoice({
       }
 
       updateEntry(entry.id, { status: "processing" });
+
+      // The upload is accepted; extraction keeps running on the server.
+      toast.add({
+        title: "Invoice uploaded",
+        description: (
+          <>
+            <span
+              className="block truncate font-medium text-foreground"
+              title={entry.file.name}
+            >
+              {entry.file.name}
+            </span>
+            <span>
+              is being processed. You can follow the progress and result in
+              Invoices.
+            </span>
+          </>
+        ),
+        type: "info",
+        actionProps: {
+          children: "View invoices",
+          onClick: () => router.push("/invoices"),
+        },
+      });
+
       await delay(onUpload ? 600 : 1000);
       updateEntry(entry.id, { status: "done" });
     } catch {
