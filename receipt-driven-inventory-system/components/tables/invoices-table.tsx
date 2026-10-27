@@ -221,7 +221,7 @@ export function InvoicesTable({ invoices, setInvoices }: InvoicesTableProps) {
         </div>
 
         <div className="overflow-x-auto">
-          <div className="min-w-[40rem]">
+          <div className="min-w-160">
             <div
               className={cn(
                 ROW_GRID,

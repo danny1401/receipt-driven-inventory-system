@@ -239,7 +239,7 @@ export function InventorySkeleton() {
         <Table className="[&_td]:px-4 [&_td]:py-3 [&_th]:px-4">
           <TableHeader className="bg-muted/40">
             <TableRow className="hover:bg-transparent">
-              <TableHead className="w-[132px]">
+              <TableHead className="w-33">
                 <Skeleton className="h-3 w-14" />
               </TableHead>
               <TableHead>
@@ -260,7 +260,7 @@ export function InventorySkeleton() {
               <TableHead>
                 <Skeleton className="ml-auto h-3 w-14" />
               </TableHead>
-              <TableHead className="w-[52px]" />
+              <TableHead className="w-13" />
             </TableRow>
           </TableHeader>
 

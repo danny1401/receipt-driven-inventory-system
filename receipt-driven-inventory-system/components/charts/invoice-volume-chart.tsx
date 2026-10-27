@@ -18,7 +18,7 @@ export function InvoiceVolumeChart({
   return (
     <>
       <div className="overflow-x-auto px-5 py-5">
-        <div className="flex min-w-[30rem] flex-col gap-2">
+        <div className="flex min-w-120 flex-col gap-2">
           <div className="flex gap-3">
             <div className="relative h-40 w-5 shrink-0 text-right text-[10px] leading-none text-muted-foreground tabular-nums">
               <span className="absolute top-0 right-0 -translate-y-1/2">

@@ -227,7 +227,7 @@ export function InventoryTable() {
                   <TableHead className="header-cell text-right">
                     Amount
                   </TableHead>
-                  <TableHead className="header-cell w-[52px]" />
+                  <TableHead className="header-cell w-13" />
                 </TableRow>
               </TableHeader>
 
