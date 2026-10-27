@@ -1,16 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
 
 import { cn } from "cn";
-import {
-  DashboardSkeleton,
-  RestrictedPage,
-  SectionHeader,
-  StatCard,
-} from "@/components/custom";
+import { DashboardSkeleton } from "@/components/structure";
+import { SectionHeader, StatCard } from "@/components/custom";
 import { InvoiceVolumeCard, StockDonutChart } from "@/components/charts";
 import { buttonVariants } from "@/components/ui/button";
 
@@ -22,7 +16,7 @@ import {
   WalletIcon,
 } from "lucide-react";
 import { LatestItemsTable } from "@/components/tables/dashboard-latest-table";
-import { PageContainer, PageHeader } from "@/components/structure";
+import { AuthGuard, PageHeader } from "@/components/structure";
 
 const STATS = [
   {
@@ -96,22 +90,11 @@ const REVIEW_TASKS = [
 ];
 
 const Page = () => {
-  const user = useQuery(api.auth.getCurrentUser);
-
-  if (user === undefined) {
-    return (
-      <PageContainer>
-        <DashboardSkeleton />
-      </PageContainer>
-    );
-  }
-
-  if (user === null) {
-    return <RestrictedPage content="The dashboard" />;
-  }
-
   return (
-    <PageContainer>
+    <AuthGuard
+      skeleton={<DashboardSkeleton />}
+      restrictedContentName="The dashboard"
+    >
       <div className="flex flex-col gap-6">
         <PageHeader content="dashboard" />
 
@@ -259,7 +242,7 @@ const Page = () => {
           </div>
         </div>
       </div>
-    </PageContainer>
+    </AuthGuard>
   );
 };
 
