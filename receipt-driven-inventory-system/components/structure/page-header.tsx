@@ -55,7 +55,7 @@ export function PageHeader({ content }: { content: string }) {
           <PopoverContent align="end" className="w-52 p-1">
             <div className="flex flex-col gap-0.5">
               {/* Invoices Section */}
-              <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+              <div className="px-2 py-1.5 text-xs text-muted-foreground">
                 Invoices
               </div>
 
@@ -82,7 +82,7 @@ export function PageHeader({ content }: { content: string }) {
               </Link>
 
               {/* Inventory Section */}
-              <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+              <div className="px-2 py-1.5 text-xs text-muted-foreground">
                 Inventory
               </div>
  
@@ -99,7 +99,7 @@ export function PageHeader({ content }: { content: string }) {
               <div className="my-1 h-px bg-border" />
 
               {/* Item Section */}
-              <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+              <div className="px-2 py-1.5 text-xs text-muted-foreground">
                 Item
               </div>
 

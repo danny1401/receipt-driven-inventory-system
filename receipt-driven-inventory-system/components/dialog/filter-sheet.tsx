@@ -44,6 +44,23 @@ export function FilterSheet({
   return (
     <Sheet>
       <div className="flex flex-wrap items-center gap-1.5">
+        {activeFilters.map((filter) => (
+          <Button
+            variant="outline"
+            key={filter.key}
+            type="button"
+            onClick={() => onRemoveFilter?.(filter.key)}
+            aria-label={`Remove ${filter.label} filter`}
+            title={`Remove ${filter.label} filter`}
+            className="group text-xs font-medium transition-colors outline-none"
+          >
+            <span className="max-w-40 truncate group-hover:text-muted-foreground group-hover:line-through">
+              {filter.label}
+            </span>
+            <XIcon className="size-3 shrink-0 text-muted-foreground group-hover:text-foreground" />
+          </Button>
+        ))}
+
         <SheetTrigger
           render={
             <Button
@@ -62,25 +79,6 @@ export function FilterSheet({
             </Button>
           }
         />
-
-        {activeFilters.map((filter) => (
-          <button
-            key={filter.key}
-            type="button"
-            onClick={() => onRemoveFilter?.(filter.key)}
-            aria-label={`Remove ${filter.label} filter`}
-            title={`Remove ${filter.label} filter`}
-            className="group inline-flex h-8 max-w-full items-center gap-1.5 rounded-lg border border-border bg-background px-2 text-xs font-medium transition-colors outline-none hover:bg-muted focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-          >
-            <span className="flex size-3.5 shrink-0 items-center justify-center rounded-[4px] border border-primary bg-primary text-primary-foreground">
-              <CheckIcon className="size-2.5" strokeWidth={3} />
-            </span>
-            <span className="max-w-40 truncate group-hover:text-muted-foreground group-hover:line-through">
-              {filter.label}
-            </span>
-            <XIcon className="size-3 shrink-0 text-muted-foreground group-hover:text-foreground" />
-          </button>
-        ))}
       </div>
 
       <SheetContent>
