@@ -1177,6 +1177,10 @@
     max-width: var(--container-6xl);
   }
 
+  .max-w-40 {
+    max-width: calc(var(--spacing) * 40);
+  }
+
   .max-w-48 {
     max-width: calc(var(--spacing) * 48);
   }
@@ -1631,6 +1635,10 @@
 
   .rounded-\[3px\] {
     border-radius: 3px;
+  }
+
+  .rounded-\[4px\] {
+    border-radius: 4px;
   }
 
   .rounded-\[min\(var\(--radius-md\)\,10px\)\] {
@@ -2114,10 +2122,6 @@
 
   .pr-2 {
     padding-right: calc(var(--spacing) * 2);
-  }
-
-  .pr-4 {
-    padding-right: calc(var(--spacing) * 4);
   }
 
   .pr-8 {
@@ -2699,6 +2703,18 @@
   @media (hover: hover) {
     .group-hover\:bg-primary:is(:where(.group):hover *) {
       background-color: var(--primary);
+    }
+
+    .group-hover\:text-foreground:is(:where(.group):hover *) {
+      color: var(--foreground);
+    }
+
+    .group-hover\:text-muted-foreground:is(:where(.group):hover *) {
+      color: var(--muted-foreground);
+    }
+
+    .group-hover\:line-through:is(:where(.group):hover *) {
+      text-decoration-line: line-through;
     }
   }
 
@@ -4730,54 +4746,6 @@
     }
   }
 
-  .\[\&_button\]\:h-auto button {
-    height: auto;
-  }
-
-  .\[\&_button\]\:w-full button {
-    width: 100%;
-  }
-
-  .\[\&_button\]\:justify-start button {
-    justify-content: flex-start;
-  }
-
-  .\[\&_button\]\:bg-transparent button {
-    background-color: #0000;
-  }
-
-  .\[\&_button\]\:px-2 button {
-    padding-inline: calc(var(--spacing) * 2);
-  }
-
-  .\[\&_button\]\:py-1\.5 button {
-    padding-block: calc(var(--spacing) * 1.5);
-  }
-
-  .\[\&_button\]\:font-normal button {
-    --tw-font-weight: var(--font-weight-normal);
-    font-weight: var(--font-weight-normal);
-  }
-
-  .\[\&_button\]\:text-foreground button {
-    color: var(--foreground);
-  }
-
-  .\[\&_button\]\:shadow-none button {
-    --tw-shadow: 0 0 #0000;
-    box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
-  }
-
-  @media (hover: hover) {
-    .\[\&_button\]\:hover\:bg-accent button:hover {
-      background-color: var(--accent);
-    }
-
-    .\[\&_button\]\:hover\:text-accent-foreground button:hover {
-      color: var(--accent-foreground);
-    }
-  }
-
   .\[\&_p\:not\(\:last-child\)\]\:mb-4 p:not(:last-child) {
     margin-bottom: calc(var(--spacing) * 4);
   }
@@ -5383,6 +5351,32 @@
   letter-spacing: var(--tracking-wide);
   color: var(--muted-foreground);
   text-transform: uppercase;
+}
+
+.popover-btn {
+  cursor: pointer;
+  align-items: center;
+  gap: calc(var(--spacing) * 2);
+  border-radius: calc(var(--radius) * .8);
+  width: 100%;
+  padding-inline: calc(var(--spacing) * 2);
+  padding-block: calc(var(--spacing) * 1.5);
+  text-align: left;
+  font-size: var(--text-sm);
+  line-height: var(--tw-leading, var(--text-sm--line-height));
+  display: flex;
+}
+
+@media (hover: hover) {
+  .popover-btn:hover {
+    background-color: var(--accent);
+  }
+}
+
+@media (hover: hover) {
+  .popover-btn:hover {
+    color: var(--accent-foreground);
+  }
 }
 
 @property --tw-translate-x {

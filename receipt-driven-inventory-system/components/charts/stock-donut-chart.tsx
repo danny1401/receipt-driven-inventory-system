@@ -2,9 +2,9 @@
 
 import { useMemo } from "react";
 import { useQuery } from "convex/react";
-
 import { api } from "@/convex/_generated/api";
-import { useWorkspace } from "@/components/custom";
+
+import { useWorkspace } from "@/components/workspace";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ALL } from "@/components/util/functions";
 

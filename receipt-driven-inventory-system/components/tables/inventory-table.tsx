@@ -2,15 +2,15 @@
 
 import { useMemo, useState } from "react";
 import { useMutation, useQuery } from "convex/react";
-
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
+
+import { useWorkspace } from "@/components/workspace";
 import {
-  DeleteDialog,
   uniqueValues,
-  useWorkspace,
   type SortOption,
 } from "@/components/custom";
+import { DeleteDialog } from "@/components/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,

@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 
 import { cn } from "cn";
-import { PageContainer } from "@/components/custom";
+import { PageContainer } from "@/components/structure";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 

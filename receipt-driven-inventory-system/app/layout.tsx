@@ -7,7 +7,8 @@ import { getToken } from "@/lib/authServer";
 import { preloadAuthQuery } from "@/lib/authServer";
 
 import { Geist, Geist_Mono } from "next/font/google";
-import { Footer, Header, WorkspaceProvider } from "../components/custom";
+import { Footer, Header } from "../components/structure";
+import { WorkspaceProvider } from "@/components/workspace"
 import { Toaster } from "@/components/ui/toast";
 import "./globals.css";
 

@@ -12,7 +12,7 @@ import { cn } from "cn";
 import { buttonVariants } from "@/components/ui/button";
 import { MenuIcon, ReceiptTextIcon, XIcon } from "lucide-react";
 
-import { UserAvatar } from "./user-avatar";
+import { UserAvatar } from "../custom/user-avatar";
 
 const navigationAddresses = [
   { href: "/dashboard", label: "Dashboard" },

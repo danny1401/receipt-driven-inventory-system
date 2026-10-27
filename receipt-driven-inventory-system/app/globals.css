@@ -151,3 +151,11 @@
     @apply bg-background text-foreground;
   }
 }
+
+.header-cell {
+  @apply h-10 text-xs font-medium tracking-wide text-muted-foreground uppercase;
+}
+
+.popover-btn {
+  @apply cursor-pointer flex items-center gap-2 w-full px-2 py-1.5 text-sm rounded-md hover:bg-accent hover:text-accent-foreground text-left;
+}

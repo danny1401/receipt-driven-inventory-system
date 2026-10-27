@@ -1,11 +1,13 @@
 import {
   FilterSelect,
-  FilterSheet,
   SearchInput,
   Sort,
+  type SortOption,
 } from "@/components/custom";
+import { FilterSheet } from "@/components/dialog";
+import { ALL } from "@/components/util/functions";
 
-type InventoryToolbarProps = {
+type InventoryToolbarProps<TSort extends string> = {
   search: string;
   onSearchChange: (value: string) => void;
   isLoading: boolean;
@@ -17,13 +19,13 @@ type InventoryToolbarProps = {
   filters: { category: string; supplier: string };
   filterOptions: { category: string[]; supplier: string[] };
   onFilterChange: (key: "category" | "supplier", value: string) => void;
-  sort: string;
-  onSortChange: (next: any) => void;
-  sortOptions: any[];
+  sort: TSort;
+  onSortChange: (next: TSort) => void;
+  sortOptions: readonly SortOption<TSort>[];
   children?: React.ReactNode;
 };
 
-export function InventoryToolbar({
+export function InventoryToolbar<TSort extends string>({
   search,
   onSearchChange,
   isLoading,
@@ -38,7 +40,16 @@ export function InventoryToolbar({
   sort,
   onSortChange,
   sortOptions,
-}: InventoryToolbarProps) {
+}: InventoryToolbarProps<TSort>) {
+  const activeFilters = [
+    ...(filters.category !== ALL
+      ? [{ key: "category", label: `Category: ${filters.category}` }]
+      : []),
+    ...(filters.supplier !== ALL
+      ? [{ key: "supplier", label: `Supplier: ${filters.supplier}` }]
+      : []),
+  ];
+
   return (
     <div className="flex flex-col gap-3 border-b border-border/60 p-4 sm:flex-row sm:items-center sm:justify-between">
       <SearchInput value={search} onValueChange={onSearchChange} />
@@ -54,6 +65,12 @@ export function InventoryToolbar({
         <FilterSheet
           activeCount={activeFilterCount}
           onClear={onClearFilters}
+          activeFilters={activeFilters}
+          onRemoveFilter={(key) => {
+            if (key === "category" || key === "supplier") {
+              onFilterChange(key, ALL);
+            }
+          }}
           description="Filter the inventory by category or supplier, and choose a sort order."
         >
           <Sort

@@ -3,14 +3,13 @@
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 
+import { useWorkspace } from "@/components/workspace";
 import {
   InventorySkeleton,
-  PageContainer,
   RestrictedPage,
-  useWorkspace,
 } from "@/components/custom";
 import { InventoryTable } from "@/components/tables/inventory-table";
-import PageHeader from "@/components/custom/page-header";
+import { PageContainer, PageHeader } from "@/components/structure";
 
 const Page = () => {
   const user = useQuery(api.auth.getCurrentUser);

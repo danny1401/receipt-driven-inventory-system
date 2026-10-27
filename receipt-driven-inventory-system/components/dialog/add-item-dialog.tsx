@@ -26,7 +26,7 @@ import {
 import { Input } from "@/components/ui/input";
 
 import { ALL } from "../util/functions";
-import { useWorkspace } from "./workspace";
+import { useWorkspace } from "@/components/workspace";
 
 type FormValues = {
   itemName: string;

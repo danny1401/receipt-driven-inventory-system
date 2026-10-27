@@ -1,4 +1,4 @@
-import { PageContainer } from "@/components/custom"; 
+import { PageContainer } from "@/components/structure"; 
 
 export const RestrictedPage = ({ content }:{ content: string }) => {
   return (

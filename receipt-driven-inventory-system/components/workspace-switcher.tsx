@@ -17,7 +17,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-import { ALL } from "../util/functions";
+import { ALL } from "./util/functions";
 import { useWorkspace } from "./workspace";
 
 /**

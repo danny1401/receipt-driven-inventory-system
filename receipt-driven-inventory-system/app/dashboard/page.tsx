@@ -7,12 +7,9 @@ import { api } from "@/convex/_generated/api";
 import { cn } from "cn";
 import {
   DashboardSkeleton,
-  PageContainer,
-  PageHeader,
   RestrictedPage,
   SectionHeader,
   StatCard,
-  useWorkspace,
 } from "@/components/custom";
 import { InvoiceVolumeCard, StockDonutChart } from "@/components/charts";
 import { buttonVariants } from "@/components/ui/button";
@@ -25,6 +22,7 @@ import {
   WalletIcon,
 } from "lucide-react";
 import { LatestItemsTable } from "@/components/tables/dashboard-latest-table";
+import { PageContainer, PageHeader } from "@/components/structure";
 
 const STATS = [
   {

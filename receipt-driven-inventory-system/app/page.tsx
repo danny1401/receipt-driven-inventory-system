@@ -6,7 +6,7 @@ import {
   HowItWorks,
   Value,
 } from "@/components/landing";
-import { FooterDescription } from "@/components/custom";
+import { FooterDescription } from "@/components/structure";
 
 export default function LandingPage() {
   return (

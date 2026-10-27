@@ -9,17 +9,16 @@ import {
 } from "lucide-react";
 import { cn } from "cn";
 
+import { useWorkspace } from "@/components/workspace";
 import {
-  DatePicker,
-  DeleteDialog,
   FilterSelect,
-  FilterSheet,
   SearchInput,
   Sort,
   uniqueValues,
-  useWorkspace,
   type SortOption,
 } from "@/components/custom";
+
+import { DatePicker, DeleteDialog, FilterSheet } from "@/components/dialog";
 import { TablePagination, useTablePagination } from "@/components/tables";
 import { Button } from "@/components/ui/button";
 import {

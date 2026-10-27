@@ -1,11 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import {
-  AddItemDialog,
-  UploadInvoice,
-  WorkspaceSwitcher,
-} from "@/components/custom";
+import { AddItemDialog, UploadInvoice } from "@/components/dialog";
+import { WorkspaceSwitcher } from "@/components/workspace-switcher";
 import { Button } from "@/components/ui/button";
 import {
   ArrowLeftRightIcon,
@@ -16,15 +13,6 @@ import {
   Settings2Icon,
   Upload,
 } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import Link from "next/link";
 import { Popover, PopoverTrigger, PopoverContent } from "../ui/popover";
 
@@ -66,13 +54,13 @@ export function PageHeader({ content }: { content: string }) {
 
           <PopoverContent align="end" className="w-52 p-1">
             <div className="flex flex-col gap-0.5">
-              {/* Inventory Section */}
+              {/* Invoices Section */}
               <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
-                Inventory
+                Invoices
               </div>
 
               <button
-                className="flex items-center gap-2 w-full px-2 py-1.5 text-sm rounded-md hover:bg-accent hover:text-accent-foreground text-left"
+                className="popover-btn"
                 onClick={(e) => {
                   e.preventDefault();
                   setUploadOpen(true);
@@ -82,12 +70,28 @@ export function PageHeader({ content }: { content: string }) {
                 Upload invoice
               </button>
 
-              <button className="flex items-center gap-2 w-full px-2 py-1.5 text-sm rounded-md hover:bg-accent hover:text-accent-foreground text-left">
+              <Link
+                href="/invoices/review"
+                className="flex flex-row items-center px-2 py-1.5 justify-between text-sm rounded-md hover:bg-accent hover:text-accent-foreground"
+              >
+                <div className="flex flex-row items-center gap-2">
+                  <ClipboardListIcon className="size-4" />
+                  Review invoices
+                </div>
+                <ExternalLink className="size-4" />
+              </Link>
+
+              {/* Inventory Section */}
+              <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+                Inventory
+              </div>
+ 
+              <button className="popover-btn">
                 <ArrowLeftRightIcon className="size-4" />
                 Replace inventory
               </button>
 
-              <button className="flex items-center gap-2 w-full px-2 py-1.5 text-sm rounded-md hover:bg-accent hover:text-accent-foreground text-left">
+              <button className="popover-btn">
                 <Download className="size-4" />
                 Export inventory
               </button>
@@ -100,7 +104,7 @@ export function PageHeader({ content }: { content: string }) {
               </div>
 
               <button
-                className="flex items-center gap-2 w-full px-2 py-1.5 text-sm rounded-md hover:bg-accent hover:text-accent-foreground text-left"
+                className="popover-btn"
                 onClick={(e) => {
                   e.preventDefault();
                   setAddItemOpen(true);
@@ -109,23 +113,8 @@ export function PageHeader({ content }: { content: string }) {
                 <Plus className="size-4" />
                 Add item
               </button>
-              
-              <div className="my-1 h-px bg-border" />
 
-              {/* Invoices Section */}
-              <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
-                Invoices
-              </div>
-              <Link
-                href="/invoices/review"
-                className="flex flex-row items-center px-2 justify-between text-sm rounded-md hover:bg-accent hover:text-accent-foreground"
-              >
-                <div className="flex flex-row items-center gap-2 py-1.5">
-                  <ClipboardListIcon className="size-4" />
-                  Review invoices
-                </div>
-                <ExternalLink className="size-4" />
-              </Link>
+              <div className="my-1 h-px bg-border" />
             </div>
           </PopoverContent>
         </Popover>

@@ -2,7 +2,8 @@ import { api } from "@/convex/_generated/api";
 import { cn } from "cn";
 import { useQuery } from "convex/react";
 import { useMemo } from "react";
-import { useWorkspace } from "../custom";
+
+import { useWorkspace } from "@/components/workspace";
 import { Skeleton } from "../ui/skeleton";
 import {
   Table,
