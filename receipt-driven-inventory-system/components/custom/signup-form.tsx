@@ -13,6 +13,8 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { authClient } from "@/lib/authClient"
+import { api } from "@/convex/_generated/api"
+import { useMutation } from "convex/react"
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -58,6 +60,7 @@ export function SignupForm({
   callbackURL?: string
 }) {
   const router = useRouter()
+  const addUser = useMutation(api.inventory.users.addUser)
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -139,13 +142,25 @@ export function SignupForm({
     setIsSubmitting(true)
 
     try {
-      const { error } = await authClient.signUp.email({
+      // Sign up the user with Better Auth
+      const { data, error } = await authClient.signUp.email({
         name: name.trim(),
         email: email.trim(),
         password,
         callbackURL,
       })
+      // Get AuthId from newly created user
+      const userId = data?.user?.id;
 
+      // Add user info to your custom Convex table if user does not exist
+      if (userId) {
+        await addUser({
+          authId: userId,
+          name: name.trim(),
+          email: email.trim(),
+        });
+      }
+      
       if (error) {
         setFormError(getSignUpErrorMessage(error))
         return

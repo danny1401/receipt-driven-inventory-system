@@ -6,11 +6,8 @@ import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 
 import { useWorkspace } from "@/components/workspace";
-import {
-  uniqueValues,
-  type SortOption,
-} from "@/components/custom";
-import { DeleteDialog } from "@/components/dialog";
+import { uniqueValues, type SortOption } from "@/components/custom";
+import { AddItemDialog, DeleteDialog } from "@/components/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -33,7 +30,11 @@ import { ALL } from "@/components/util/functions";
 export type InventoryRow = {
   id: Id<"lineItems">;
   supplierName: string;
+  customerName: string;
+  customerId: Id<"customers">;
+  itemId: Id<"items">;
   itemName: string;
+  sku: string;
   category: string;
   quantity: number | null;
   quantityUnit: string | null;
@@ -95,6 +96,8 @@ function formatMoney(value: number | null) {
 export function InventoryTable() {
   const [deleteTarget, setDeleteTarget] = useState<InventoryRow | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState<InventoryRow | null>(null);
+  const [editOpen, setEditOpen] = useState(false);
   const [sort, setSort] = useState<SortKey>("name-asc");
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
   const [search, setSearch] = useState("");
@@ -119,9 +122,13 @@ export function InventoryTable() {
   const commodity = useMemo(
     () =>
       (inventory ?? []).map<InventoryRow>((line) => ({
-        id: line._id,
+        id: line._id as Id<"lineItems">,
         supplierName: line.supplierName ?? "—",
+        customerName: line.customerName ?? "",
+        customerId: line.customerId,
+        itemId: line.itemId,
         itemName: line.item?.itemName ?? "Unknown item",
+        sku: line.item?.sku ?? "",
         category: line.item?.category ?? "—",
         quantity: line.quantity,
         quantityUnit: line.quantityUnit,
@@ -258,7 +265,7 @@ export function InventoryTable() {
 
                 {!isLoading &&
                   visibleRows.map((item) => (
-                    <TableRow key={item.id}>
+                    <TableRow key={item.itemId}>
                       <TableCell className="font-medium">
                         {item.itemName}
                       </TableCell>
@@ -273,6 +280,10 @@ export function InventoryTable() {
                       <TableCell className="text-right">
                         <InventoryRowActions
                           item={item}
+                          onEdit={(target) => {
+                            setEditTarget(target);
+                            setEditOpen(true);
+                          }}
                           onDeleteRequest={(target) => {
                             setDeleteTarget(target);
                             setDeleteOpen(true);
@@ -328,6 +339,12 @@ export function InventoryTable() {
           if (!deleteTarget) return;
           void deleteLineItem({ itemId: deleteTarget.id });
         }}
+      />
+
+      <AddItemDialog
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        item={editTarget}
       />
     </div>
   );

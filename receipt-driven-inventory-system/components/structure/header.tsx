@@ -32,7 +32,7 @@ export const Header = ({
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-background/80 backdrop-blur-xl">
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
-        {user ? (
+
           <Link
             href="/dashboard"
             onClick={() => setMenuOpen(false)}
@@ -45,20 +45,6 @@ export const Header = ({
               Receipt-Driven Inventory System
             </span>
           </Link>
-        ) : (
-          <Link
-            href="/"
-            onClick={() => setMenuOpen(false)}
-            className="flex min-w-0 items-center gap-2.5 font-semibold tracking-tight"
-          >
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <ReceiptTextIcon className="size-5" />
-            </span>
-            <span className="truncate text-base">
-              Receipt-Driven Inventory System
-            </span>
-          </Link>
-        )}
 
         <div className="flex items-center gap-2">
           <div className="hidden items-center gap-2 md:flex">
@@ -82,25 +68,7 @@ export const Header = ({
                   </Link>
                 );
               })
-            ) : (
-              <>
-                <Link
-                  href="/log-in"
-                  className={cn(
-                    buttonVariants({ variant: "ghost", size: "lg" }),
-                    "px-4 text-muted-foreground hover:text-foreground",
-                  )}
-                >
-                  Log in
-                </Link>
-                <Link
-                  href="/sign-in"
-                  className={cn(buttonVariants({ size: "lg" }), "px-4")}
-                >
-                  Get started
-                </Link>
-              </>
-            )}
+            ) : null}
           </div>
 
           {user ? (
@@ -190,27 +158,7 @@ export const Header = ({
                     Profile
                   </Link>
                 </>
-              ) : (
-                <>
-                  <Link
-                    href="/sign-in"
-                    onClick={() => setMenuOpen(false)}
-                    className={buttonVariants({
-                      variant: "outline",
-                      size: "lg",
-                    })}
-                  >
-                    Sign in
-                  </Link>
-                  <Link
-                    href="/sign-in"
-                    onClick={() => setMenuOpen(false)}
-                    className={buttonVariants({ size: "lg" })}
-                  >
-                    Get started
-                  </Link>
-                </>
-              )}
+              ) : null}
             </div>
           </nav>
         </div>

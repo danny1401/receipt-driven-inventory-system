@@ -1,9 +1,10 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/convex/_generated/api";
-import { useMutation } from "convex/react";
+import type { Doc, Id } from "@/convex/_generated/dataModel";
+import { useMutation, useQueries, useQuery } from "convex/react";
 
 import { cn } from "cn";
 import { toast } from "@/components/ui/toast";
@@ -16,8 +17,15 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Attachment,
   AttachmentAction,
@@ -27,14 +35,18 @@ import {
   AttachmentMedia,
   AttachmentTitle,
 } from "@/components/ui/attachment";
-
 import {
+  Building2Icon,
+  CheckIcon,
+  ChevronsUpDownIcon,
   FileTextIcon,
   ImageIcon,
   LoaderCircleIcon,
   UploadIcon,
   XIcon,
 } from "lucide-react";
+import { ALL } from "../util/functions";
+import { useWorkspace } from "../workspace";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
@@ -108,21 +120,89 @@ export function UploadInvoice({
   const [internalOpen, setInternalOpen] = useState(false);
   const [entries, setEntries] = useState<UploadEntry[]>([]);
   const [isDragging, setIsDragging] = useState(false);
+  const [selectedCustomerId, setSelectedCustomerId] =
+    useState<Id<"customers"> | null>(null);
+  const { workspace } = useWorkspace();
   const dragDepth = useRef(0);
   const router = useRouter();
 
   const isOpen = externalOpen ?? internalOpen;
   const setIsOpen = externalOnOpenChange ?? setInternalOpen;
 
+  // Convex Queries and Mutations
   const generateUploadUrl = useMutation(
     api.inventory.invoices.generateUploadUrl,
   );
   const uploadInvoice = useMutation(api.inventory.invoices.uploadInvoice);
 
+  // The customer ids this signed-in user can upload invoices for.
+  const customerIds = useQuery(
+    api.inventory.customers.getCustomerIdsByBetterAuthId,
+  );
+
+  // Dynamically build a request map to fetch details for each customer ID in parallel
+  const customerRequests = useMemo(
+    () =>
+      Object.fromEntries(
+        (customerIds ?? []).map((customerId) => [
+          customerId,
+          {
+            query: api.inventory.customers.getCustomerById,
+            args: { customerId },
+          },
+        ]),
+      ),
+    [customerIds],
+  );
+
+  // Execute all customer queries concurrently using Convex's useQueries hook
+  const customerResults = useQueries(customerRequests) as Record<
+    string,
+    Doc<"customers"> | null | undefined | Error
+  >;
+
+  // Filter out loading states or errors, extract valid customer documents, and sort alphabetically by name
+  const customers = useMemo(
+    () =>
+      (customerIds ?? [])
+        .map((customerId) => customerResults[customerId])
+        .filter(
+          (customer): customer is Doc<"customers"> =>
+            customer !== null &&
+            customer !== undefined &&
+            !(customer instanceof Error),
+        )
+        .sort((a, b) => a.customerName.localeCompare(b.customerName)),
+    [customerIds, customerResults],
+  );
+
+  // True if customer data is still being fetched from the server
+  const customersLoading =
+    customerIds === undefined ||
+    customerIds.some((customerId) => customerResults[customerId] === undefined);
+
+  // Determine the active customer using a fallback hierarchy:
+  // 1. Explicitly selected customer -> 2. Customer matching current workspace name -> 3. First available customer -> 4. null
+  const selectedCustomer =
+    customers.find((customer) => customer._id === selectedCustomerId) ??
+    customers.find(
+      (customer) => workspace !== ALL && customer.customerName === workspace,
+    ) ??
+    customers[0] ??
+    null;
+  
+  const cannotUpload = entries.length === 0 || entries.every((e) => e.status !== "idle");
+
+  // Count how many files are waiting to be uploaded
   const pendingCount = entries.filter(
     (entry) => entry.status === "idle",
   ).length;
 
+  // ==========================================
+  // HELPER FUNCTIONS (ENTRY MANAGEMENT)
+  // ==========================================
+
+  // Utility to update a specific file entry's state (e.g., status, progress, error messages)
   const updateEntry = (id: string, patch: Partial<UploadEntry>) => {
     setEntries((current) =>
       current.map((entry) =>
@@ -131,12 +211,15 @@ export function UploadInvoice({
     );
   };
 
+  // Adds files from file input or drag-and-drop to the queue, 
+  // checking for duplicates and running validation
   const addFiles = (list: FileList | null) => {
     if (!list || list.length === 0) return;
 
     const incoming = Array.from(list);
 
     setEntries((current) => {
+      // Create a set of already-added files based on name and size to prevent duplicates
       const seen = new Set(
         current.map((entry) => `${entry.file.name}:${entry.file.size}`),
       );
@@ -157,35 +240,54 @@ export function UploadInvoice({
     });
   };
 
+  // Removes a file entry from the queue by its unique ID
   const removeEntry = (id: string) => {
     setEntries((current) => current.filter((entry) => entry.id !== id));
   };
 
-  const runUpload = async (entry: UploadEntry) => {
+  // ==========================================
+  // UPLOAD EXECUTION LOGIC
+  // ==========================================
+
+  const runUpload = async (
+    entry: UploadEntry,
+    customerId: Id<"customers"> | null,
+  ) => {
+    // Mark entry as currently uploading and clear previous errors
     updateEntry(entry.id, { status: "uploading", error: undefined });
 
     try {
       if (onUpload) {
+        // If a custom upload handler was passed via props, use that
         await onUpload(entry.file);
       } else {
-        // 1. Get the temporary upload URL from Convex
+        // Standard Convex storage upload flow:
+        // 1. Get a temporary secure upload URL from Convex storage
         const postUrl = await generateUploadUrl();
 
-        // 2. POST the raw file directly to the URL
+        // 2. Perform a direct POST request with the raw file data
         const result = await fetch(postUrl, {
           method: "POST",
           headers: { "Content-Type": entry.file!.type },
           body: entry.file,
         });
         const { storageId } = await result.json();
-        await uploadInvoice({ storageId, fileName: entry.file.name });
 
+        // 3. Save the invoice record linking the storage ID and customer ID in the database
+        await uploadInvoice({
+          storageId,
+          fileName: entry.file.name,
+          ...(customerId ? { customerId } : {}),
+        });
+
+        // Small simulated delay for UI smoothness
         await delay(700);
       }
 
+      // Mark status as processing (server-side background extraction is running)
       updateEntry(entry.id, { status: "processing" });
 
-      // The upload is accepted; extraction keeps running on the server.
+      // Trigger a toast notification informing the user of successful upload
       toast.add({
         title: "Invoice uploaded",
         description: (
@@ -219,13 +321,20 @@ export function UploadInvoice({
     }
   };
 
+  // Triggers upload for all pending ("idle") files in the queue
   const startUpload = () => {
+    const customerId = selectedCustomer?._id;
+
     entries
       .filter((entry) => entry.status === "idle")
       .forEach((entry) => {
-        void runUpload(entry);
+        void runUpload(entry, customerId);
       });
   };
+
+  // ==========================================
+  // DRAG & DROP EVENT HANDLERS
+  // ==========================================
 
   const handleDragEnter = (event: React.DragEvent<HTMLLabelElement>) => {
     event.preventDefault();
@@ -269,6 +378,80 @@ export function UploadInvoice({
             files.
           </DialogDescription>
         </DialogHeader>
+
+        {!customersLoading && customers.length > 0 && (
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-sm font-medium">Customer</span>
+              <span className="text-xs text-muted-foreground">
+                Upload destination
+              </span>
+            </div>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start"
+                    disabled={!customersLoading && customers.length === 0}
+                    aria-label={`Choose customer (current: ${
+                      selectedCustomer?.customerName ?? "none"
+                    })`}
+                  >
+                    <Building2Icon className="text-muted-foreground" />
+                    <span className="min-w-0 flex-1 truncate text-left">
+                      {selectedCustomer?.customerName ?? "Select customer"}
+                    </span>
+                    <ChevronsUpDownIcon className="text-muted-foreground" />
+                  </Button>
+                }
+              />
+
+              <DropdownMenuContent align="start">
+                <DropdownMenuGroup>
+                  <DropdownMenuLabel>Customers</DropdownMenuLabel>
+
+                  {customersLoading && customers.length === 0 && (
+                    <DropdownMenuItem disabled>
+                      <span className="text-muted-foreground">
+                        Loading customers…
+                      </span>
+                    </DropdownMenuItem>
+                  )}
+
+                  {!customersLoading && customers.length === 0 && (
+                    <DropdownMenuItem disabled>
+                      <span className="text-muted-foreground">
+                        No customers available
+                      </span>
+                    </DropdownMenuItem>
+                  )}
+
+                  {customers.map((customer) => (
+                    <DropdownMenuItem
+                      key={customer._id}
+                      onClick={() => setSelectedCustomerId(customer._id)}
+                    >
+                      <span
+                        className="flex-1 truncate"
+                        title={customer.customerName}
+                      >
+                        {customer.customerName}
+                      </span>
+                      {selectedCustomer?._id === customer._id && <CheckIcon />}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <p className="text-xs text-muted-foreground">
+              The invoice and its line items will be added to this customer.
+            </p>
+          </div>
+        )}
+        
 
         <label
           onDragEnter={handleDragEnter}
@@ -359,7 +542,10 @@ export function UploadInvoice({
           <DialogClose render={<Button variant="outline" />}>
             Cancel
           </DialogClose>
-          <Button disabled={pendingCount === 0} onClick={startUpload}>
+          <Button
+            disabled={pendingCount === 0 || cannotUpload}
+            onClick={startUpload}
+          >
             <UploadIcon />
             {pendingCount > 1 ? `Upload ${pendingCount} files` : "Upload"}
           </Button>

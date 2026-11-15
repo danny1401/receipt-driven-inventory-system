@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { AddItemDialog, UploadInvoice } from "@/components/dialog";
+import { MonthSwitcher } from "@/components/month-switcher";
 import { WorkspaceSwitcher } from "@/components/workspace-switcher";
 import { Button } from "@/components/ui/button";
 import {
@@ -45,76 +46,80 @@ export function PageHeader({ content }: { content: string }) {
 
       <div className="flex flex-wrap items-center gap-2">
         <WorkspaceSwitcher />
+        <MonthSwitcher />
 
+        {/* Options */}
         <Popover>
           <PopoverTrigger render={<Button variant="default" />}>
             <Settings2Icon />
             Options
           </PopoverTrigger>
 
-          <PopoverContent align="end" className="w-52 p-1">
+          <PopoverContent align="end" className="w-52 p-0">
             <div className="flex flex-col gap-0.5">
               {/* Invoices Section */}
-              <div className="px-2 py-1.5 text-xs text-muted-foreground">
-                Invoices
-              </div>
-
-              <button
-                className="popover-btn"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setUploadOpen(true);
-                }}
-              >
-                <Upload className="size-4" />
-                Upload invoice
-              </button>
-
-              <Link
-                href="/invoices/review"
-                className="flex flex-row items-center px-2 py-1.5 justify-between text-sm rounded-md hover:bg-accent hover:text-accent-foreground"
-              >
-                <div className="flex flex-row items-center gap-2">
-                  <ClipboardListIcon className="size-4" />
-                  Review invoices
+              <div className="p-1">
+                <div className="px-2 py-1.5 text-xs text-muted-foreground">
+                  Invoices
                 </div>
-                <ExternalLink className="size-4" />
-              </Link>
+                <button
+                  className="popover-btn"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setUploadOpen(true);
+                  }}
+                >
+                  <Upload className="size-4" />
+                  Upload invoice
+                </button>
+                <Link
+                  href="/invoices/review"
+                  className="flex flex-row items-center px-2 py-1.5 justify-between text-sm rounded-md hover:bg-accent hover:text-accent-foreground"
+                >
+                  <div className="flex flex-row items-center gap-2">
+                    <ClipboardListIcon className="size-4" />
+                    Review invoices
+                  </div>
+                  <ExternalLink className="size-4" />
+                </Link>
+              </div>
+              <div className="mt-1 h-px bg-border" />
 
               {/* Inventory Section */}
-              <div className="px-2 py-1.5 text-xs text-muted-foreground">
-                Inventory
+              <div className="p-1">
+                <div className="px-2 py-1.5 text-xs text-muted-foreground">
+                  Inventory
+                </div>
+
+                <button className="popover-btn">
+                  <ArrowLeftRightIcon className="size-4" />
+                  Replace inventory
+                </button>
+
+                <button className="popover-btn">
+                  <Download className="size-4" />
+                  Export inventory
+                </button>
               </div>
- 
-              <button className="popover-btn">
-                <ArrowLeftRightIcon className="size-4" />
-                Replace inventory
-              </button>
-
-              <button className="popover-btn">
-                <Download className="size-4" />
-                Export inventory
-              </button>
-
-              <div className="my-1 h-px bg-border" />
+              <div className="mt-1 h-px bg-border" />
 
               {/* Item Section */}
-              <div className="px-2 py-1.5 text-xs text-muted-foreground">
-                Item
+              <div className="p-1">
+                <div className="px-2 py-1.5 text-xs text-muted-foreground">
+                  Item
+                </div>
+
+                <button
+                  className="popover-btn"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setAddItemOpen(true);
+                  }}
+                >
+                  <Plus className="size-4" />
+                  Add item
+                </button>
               </div>
-
-              <button
-                className="popover-btn"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setAddItemOpen(true);
-                }}
-              >
-                <Plus className="size-4" />
-                Add item
-              </button>
-
-              <div className="my-1 h-px bg-border" />
             </div>
           </PopoverContent>
         </Popover>

@@ -1,14 +1,20 @@
 import { InventoryToolbar } from "./inventory-toolbar";
 import { InventoryRowActions } from "./inventory-row";
 import { InventoryTable } from "./inventory-table";
-import { InvoicesTable } from "./invoices-table";
+import { InvoiceList } from "./invoice-list";
+import { InvoiceRow } from "./invoice-row";
+import { InvoiceTable } from "./invoice-table";
 import { TablePagination, useTablePagination } from './table-pagination';
 
 export {
   InventoryTable,
   InventoryToolbar,
   InventoryRowActions,
-  InvoicesTable,
+
+  InvoiceList,
+  InvoiceRow,
+  InvoiceTable,
+  
   TablePagination,
   useTablePagination,
 }

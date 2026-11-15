@@ -21,6 +21,7 @@ export function LatestItemsTable() {
     () => (workspace === ALL ? {} : { customerName: workspace }),
     [workspace],
   );
+
   const latestItems = useQuery(
     api.inventory.inventory.listLatestItems,
     latestItemArgs,
@@ -71,7 +72,7 @@ export function LatestItemsTable() {
         )}
 
         {latestItems?.map((line) => (
-          <TableRow key={line._id}>
+          <TableRow key={line.itemId}>
             <TableCell className="font-medium">
               {line.item?.itemName ?? "Unknown item"}
             </TableCell>

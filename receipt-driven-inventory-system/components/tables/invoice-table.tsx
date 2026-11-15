@@ -59,7 +59,7 @@ type DeleteTarget = {
   itemName: string;
 };
 
-type InvoicesTableProps = {
+type InvoiceTableProps = {
   invoices: Invoice[];
   setInvoices: Dispatch<SetStateAction<Invoice[]>>;
 };
@@ -118,7 +118,7 @@ function orderTotal(invoice: Invoice) {
     .toFixed(2);
 }
 
-export function InvoicesTable({ invoices, setInvoices }: InvoicesTableProps) {
+export function InvoiceTable({ invoices, setInvoices }: InvoiceTableProps) {
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null);
   const [sort, setSort] = useState<SortKey>("name-asc");
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);

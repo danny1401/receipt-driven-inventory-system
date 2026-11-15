@@ -1,5 +1,4 @@
 import type * as React from "react";
-import { Footer } from "@/components/custom";
 
 import { cn } from "cn";
 
