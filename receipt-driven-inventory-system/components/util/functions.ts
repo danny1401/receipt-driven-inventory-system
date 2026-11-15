@@ -13,3 +13,12 @@ export function formatQuantity(quantity: number | null, unit: string | null) {
   if (quantity === null) return "—";
   return unit ? `${quantity} ${unit}` : `${quantity}`;
 }
+
+/** Format a `YYYY-MM` key as e.g. “November 2026”. */
+export function formatMonthLabel(yearMonth: string) {
+  const [year, month] = yearMonth.split("-").map(Number);
+  return new Date(year, month - 1, 1).toLocaleDateString("en-US", {
+    month: "long",
+    year: "numeric",
+  });
+}

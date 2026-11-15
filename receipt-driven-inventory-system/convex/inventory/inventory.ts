@@ -1,26 +1,28 @@
 import { v } from "convex/values";
-
 import type { Doc } from "../_generated/dataModel";
 import { query } from "../_generated/server";
-import { CUSTOMER_LIMIT, hydrateLineItem, readLatestLineItems, readLineItems, roundToTwo } from "./helpers";
+import { roundToTwo } from "./helpers";
+import * as Stock from "../model/stock";
+import * as Customer from "../model/customer";
 
 /** Distinct customer names, used as workspaces across the app. */
 export const listWorkspaces = query({
   args: {},
   handler: async (ctx) => {
-    const customers = await ctx.db.query("customers").take(CUSTOMER_LIMIT);
+    // List relevant customers
+    const customers = await Customer.listCustomers(ctx);
 
-    return [...new Set(customers.map((customer) => customer.customerName))].sort(
-      (a, b) => a.localeCompare(b),
-    );
+    return [
+      ...new Set(customers.map((customer) => customer.customerName)),
+    ].sort((a, b) => a.localeCompare(b));
   },
 });
 
 // List all items in inventory, optionally scoped to one customer.
 export const listInventory = query({
-  args: { 
+  args: {
     searchTerm: v.optional(v.string()),
-    customerName: v.optional(v.string())
+    customerName: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     let lineItems: Doc<"lineItems">[];
@@ -30,24 +32,29 @@ export const listInventory = query({
       lineItems = await ctx.db
         .query("lineItems")
         .withSearchIndex("search_line_items", (q) =>
-          q.search("searchField", args.searchTerm!)
+          q.search("searchField", args.searchTerm!),
         )
         .take(50); // Adjust limit as needed
     } else {
       // Fallback to your original reading logic when no search term is entered
-      lineItems = await readLineItems(ctx, args.customerName);
+      lineItems = await Stock.readLineItems(ctx, args.customerName);
     }
     
-    return await Promise.all(
+    const inventory = await Promise.all(
       lineItems.map(async (lineItem) => {
-        const row = await hydrateLineItem(ctx, lineItem);
+        const row = await Stock.hydrateLineItem(ctx, lineItem);
         const invoice = lineItem.invoiceId
           ? await ctx.db.get("invoices", lineItem.invoiceId)
           : null;
 
-        return { ...row, invoiceNumber: invoice?.orderId ?? null };
+        return {
+          ...row,
+          invoiceNumber: invoice?.orderId ?? null,
+        };
       }),
     );
+
+    return inventory;
   },
 });
 
@@ -55,22 +62,20 @@ export const listInventory = query({
 export const listLatestItems = query({
   args: { customerName: v.optional(v.string()) },
   handler: async (ctx, args) => {
-    const lineItems = await readLatestLineItems(ctx, args.customerName);
+    const lineItems = await Stock.readLatestLineItems(ctx, args.customerName);
 
     return await Promise.all(
-      lineItems.map((lineItem) => hydrateLineItem(ctx, lineItem)),
+      lineItems.map((lineItem) => Stock.hydrateLineItem(ctx, lineItem)),
     );
   },
 });
 
-/**
- * Tracked items and receipt cost grouped by item category. Used by the
- * dashboard donut chart, optionally scoped to one customer.
- */
+// Tracked items and receipt cost grouped by item category. 
+// Used by the dashboard donut chart, optionally scoped to one customer.
 export const getStockByCategory = query({
   args: { customerName: v.optional(v.string()) },
   handler: async (ctx, args) => {
-    const lineItems = await readLineItems(ctx, args.customerName);
+    const lineItems = await Stock.readLineItems(ctx, args.customerName);
 
     // Resolve each distinct item once instead of reading per line item.
     const itemIds = [...new Set(lineItems.map((lineItem) => lineItem.itemId))];
@@ -131,4 +136,14 @@ export const getStockByCategory = query({
 
 // Import into existing inventory
 
+
 // Import and replace existing inventory
+
+
+// Export
+// Based on Customer and Month
+// Choose filetype .xlsx, .img, .csv
+// Add together totals and stocks
+// Add associated items
+// Compare to manual input'
+// Create spreadsheet design 

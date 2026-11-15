@@ -1,6 +1,7 @@
 import { httpRouter } from "convex/server";
 import { httpAction } from "./_generated/server";
 import { internal } from "./_generated/api";
+import type { Id } from "./_generated/dataModel";
 
 import { authComponent, createAuth } from "./betterAuth/auth";
 
@@ -15,8 +16,18 @@ http.route({
   handler: httpAction(async (ctx, request) => {
     try {
       const payload = await request.json();
-      const { fileName, fileData } = payload;
-
+      const { from, fileName, fileData } = payload;
+      
+      const emailMatch = from.match(/<([^>]+)>/) || [null, from];
+      const emailOnly = emailMatch[1].trim();
+      
+      const inboundId = await ctx.runQuery(
+        internal.inventory.inboundEmails.getIdByInboundForwarderEmail,
+        { 
+          email: emailOnly 
+        }
+      );
+      
       if (!fileData) {
         return new Response(
           JSON.stringify({ error: "No file data provided" }),
@@ -41,11 +52,15 @@ http.route({
       // Schedule the PDF extraction action to run immediately in the background
       await ctx.scheduler.runAfter(
         0,
-        internal.invoice.processInvoice.processInvoice,
+        internal.invoice_pipeline.processInvoice.processInvoice,
         {
           storageId,
           fileName: fileName || "attachment.pdf",
           createdAt: Date.now(),
+          updatedAt: Date.now(),
+          status: "Received from email",
+          customerId: inboundId as Id<"customers"> || undefined,
+          userId: inboundId as Id<"users"> || undefined,
         },
       );
 

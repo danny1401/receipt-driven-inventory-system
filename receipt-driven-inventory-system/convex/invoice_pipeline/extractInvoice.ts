@@ -42,7 +42,7 @@ const extractionPrompt = `Extract the invoice details from this document and fil
   If any field cannot be found or filled properly, use null for its value.`;
 
 const primaryModel = "gemini-3.5-flash-lite";
-const fallbackModel = "gemini-3.7-flash";
+const fallbackModel = "gemini-3.1-flash-lite";
 
 async function extractInvoice(
   base64Data: string,

@@ -7,6 +7,8 @@ export const saveInvoice = internalMutation({
     fileName: v.string(),
     storageId: v.id("_storage"),
     createdAt: v.number(),
+    updatedAt: v.number(),
+    status: v.string(),
 
     supplierName: v.string(),
     supplierOrgId: v.string(),
@@ -26,6 +28,8 @@ export const saveInvoice = internalMutation({
         quantityUnit: v.union(v.string(), v.null()),
         unitPrice: v.union(v.number(), v.null()),
         total: v.union(v.number(), v.null()),
+        createdAt: v.number(),
+        updatedAt: v.number(),
       }),
     ),
     sum: v.union(v.number(), v.null()),
@@ -78,11 +82,16 @@ export const saveInvoice = internalMutation({
           searchField: args.customerName.toLowerCase(), // <-- Add this to satisfy the schema
         });
 
+    // Extra step: 
+    const OrderDateUnix = args.orderDate ? new Date(args.orderDate).getTime() : Date.now();
+
     // 4. Insert Invoice
     const invoiceId = await ctx.db.insert("invoices", {
       fileName: args.fileName,
       storageId: args.storageId,
       createdAt: args.createdAt,
+      updatedAt: args.updatedAt,
+      status: args.status,
       orderId: args.orderId,
       orderDate: args.orderDate,
       deliveringDate: args.deliveringDate,
@@ -110,6 +119,8 @@ export const saveInvoice = internalMutation({
         quantityUnit: item.quantityUnit,
         unitPrice: item.unitPrice,
         total: item.total,
+        orderDate: OrderDateUnix,
+        updatedAt: item.updatedAt,
         searchField: item.itemName.toLowerCase(),
       });
     }

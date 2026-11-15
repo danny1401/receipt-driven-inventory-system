@@ -1,16 +1,16 @@
 import  { betterAuth, type BetterAuthOptions } from "better-auth";
 
-import { createClient } from "@convex-dev/better-auth";
+import { AuthFunctions, createClient } from "@convex-dev/better-auth";
 import { convex } from "@convex-dev/better-auth/plugins";
 import type { GenericCtx } from "@convex-dev/better-auth/utils";
 
-import { components } from "../_generated/api";
+import { components, internal } from "../_generated/api";
 import type { DataModel } from "../_generated/dataModel";
 
 import authConfig from "../auth.config";
 import schema from "./schema";
 
-// Better Auth Component
+// Better Auth Component: Initialize the client with triggers and schema
 export const authComponent = createClient<DataModel, typeof schema>(
   components.betterAuth,
   {

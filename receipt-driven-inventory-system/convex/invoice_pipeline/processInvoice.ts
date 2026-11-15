@@ -8,6 +8,10 @@ export const processInvoice = internalAction({
     storageId: v.id("_storage"),
     fileName: v.string(),
     createdAt: v.number(),
+    updatedAt: v.number(),
+    status: v.string(),
+    customerId: v.optional(v.id("customers")),
+    userId: v.optional(v.id("users")),
   },
   handler: async (ctx, args) => {
     let parsedData: any = {};
@@ -36,17 +40,29 @@ export const processInvoice = internalAction({
       // 4. Parse the JSON output from Gemini
       const cleanedText = textOutput.replace(/```json\n?|\n?```/g, "").trim();
       parsedData = JSON.parse(cleanedText);
+
+      parsedData.order = parsedData.order.map((item: any) => ({
+        ...item,
+        updatedAt: args.updatedAt,
+      }));
+
+      console.log("ParsedData:", parsedData);
+
       console.log(`[processInvoice] Parsing response.`);
 
       // 5. Check if critical array items are missing or empty
       if (!parsedData.order || parsedData.order.length === 0) {
-        throw new Error("[processInvoice] Validation failed: The extracted invoice is missing required 'order' items.");
+        throw new Error(
+          "[processInvoice] Validation failed: The extracted invoice is missing required 'order' items.",
+        );
       }
 
-      await ctx.runMutation(internal.invoice.saveInvoice.saveInvoice, {
+      await ctx.runMutation(internal.invoice_pipeline.saveInvoice.saveInvoice, {
         fileName: args.fileName,
         storageId: args.storageId,
         createdAt: args.createdAt,
+        updatedAt: args.updatedAt,
+        status: args.status,
 
         supplierName: parsedData.supplierName,
         supplierOrgId: parsedData.supplierOrgId,
@@ -62,7 +78,9 @@ export const processInvoice = internalAction({
         searchField: parsedData.orderId.toLowerCase(),
       });
 
-      console.log(`[processInvoice] Forwarding to internal mutation [saveInvoice].`);
+      console.log(
+        `[processInvoice] Forwarding to internal mutation [saveInvoice].`,
+      );
     } catch (error: any) {
       // If any error happens (API down, bad JSON, unreadable PDF), flag it for review
       console.error(
@@ -70,11 +88,20 @@ export const processInvoice = internalAction({
         error.message,
       );
 
+      // Get Email of inbound
+
+      // Find users
+
+      // connect to flagged
+
       // Save file to your database via internal mutation
-      await ctx.runMutation(internal.invoice.flagInvoice.flagInvoice, {
+      await ctx.runMutation(internal.invoice_pipeline.flagInvoice.flagInvoice, {
         fileName: args.fileName,
         storageId: args.storageId,
         createdAt: args.createdAt,
+        updatedAt: args.updatedAt,
+        customerId: args.customerId,
+        userId: args.userId,
       });
     }
   },
