@@ -18,6 +18,10 @@ import { LatestItemsTable } from "@/components/tables/dashboard-latest-table";
 import { PageHeader } from "@/components/structure";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { useWorkspace } from "@/components/workspace";
+import { useMonth } from "@/components/month";
+import { ALL, monthStartTimestamp } from "@/components/util/functions";
+import { useMemo } from "react";
 
 const LATEST_ORDERS = [
   {
@@ -63,24 +67,43 @@ const REVIEW_TASKS = [
   { orderId: "2026/181220", reason: "New supplier", date: "08.10.2026" },
 ];
 
-const Page = () => {
-  const totalInvoices = [];
-  const totalValue = [];
-  const totalItems = [];
+const moneyFormatter = new Intl.NumberFormat("en-US", {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
 
-  // get flagged sum
-  const totalFlags = JSON.stringify(
-    useQuery(api.inventory.flaggedInvoices.totalFlaggedInvoices),
+const countFormatter = new Intl.NumberFormat("en-US");
+
+const Page = () => {
+  const { workspace } = useWorkspace();
+  const { month } = useMonth();
+
+  const orderDate = useMemo(() => monthStartTimestamp(month), [month]);
+
+  // Stats are always scoped to one workspace, so `all` skips the queries.
+  const statsArgs = useMemo(
+    () =>
+      workspace === ALL
+        ? ("skip" as const)
+        : { customerName: workspace, orderDate },
+    [workspace, orderDate],
   );
 
-  try {
-    // get workspace and month if chosen
-    // workspace like in the other files
-    // now fix the function
-    // get total sum of invoices
-    // get total items
-    // get total sum of value
-  } catch (error) {}
+  const totalInvoices = useQuery(
+    api.inventory.inventory.totalInvoices,
+    statsArgs,
+  );
+  const totalItems = useQuery(api.inventory.inventory.totalItems, statsArgs);
+  const totalCosts = useQuery(api.inventory.inventory.totalCosts, statsArgs);
+  const totalFlags = useQuery(
+    api.inventory.inventory.totalFlaggedInvoices,
+    statsArgs,
+  );
+
+  const scopeHint =
+    workspace === ALL
+      ? "Choose a workspace to see this month"
+      : `Across ${workspace} this month`;
 
   return (
     <div className="flex flex-col gap-6">
@@ -90,25 +113,37 @@ const Page = () => {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           label="Total invoices"
-          value="12"
-          hint="Parsed from supplier PDFs"
+          value={
+            totalInvoices === undefined
+              ? "—"
+              : countFormatter.format(totalInvoices)
+          }
+          hint={scopeHint}
           icon={ReceiptTextIcon}
         />
         <StatCard
           label="Total items"
-          value="36"
+          value={
+            totalItems === undefined ? "—" : countFormatter.format(totalItems)
+          }
           hint="Added to on-hand stock"
           icon={BoxesIcon}
         />
         <StatCard
           label="Total value"
-          value="36.00 kr"
+          value={
+            totalCosts === undefined
+              ? "—"
+              : `${moneyFormatter.format(totalCosts)} kr`
+          }
           hint="Across this month's receipts"
           icon={WalletIcon}
         />
         <StatCard
           label="Awaiting review"
-          value={totalFlags}
+          value={
+            totalFlags === undefined ? "—" : countFormatter.format(totalFlags)
+          }
           hint="Flagged invoices need a person"
           icon={ShieldAlertIcon}
         />

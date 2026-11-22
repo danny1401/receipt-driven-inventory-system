@@ -22,3 +22,17 @@ export function formatMonthLabel(yearMonth: string) {
     year: "numeric",
   });
 }
+
+/**
+ * Start of a `YYYY-MM` month as a UTC timestamp. The `all` sentinel resolves
+ * to the start of the current month so queries always receive a valid number.
+ */
+export function monthStartTimestamp(month: string) {
+  if (month === ALL) {
+    const now = new Date();
+    return Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1);
+  }
+
+  const [year, monthNumber] = month.split("-").map(Number);
+  return Date.UTC(year, monthNumber - 1, 1);
+}

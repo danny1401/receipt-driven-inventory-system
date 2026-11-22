@@ -25,11 +25,13 @@ import {
   useTablePagination,
 } from "@/components/tables";
 import { ALL } from "@/components/util/functions";
+import { useMonth } from "../month";
 
 /** One line item, flattened with the names the table displays. */
 export type InventoryRow = {
   id: Id<"lineItems">;
   supplierName: string;
+  supplierId: Id<"suppliers"> | null;
   customerName: string;
   customerId: Id<"customers">;
   itemId: Id<"items">;
@@ -102,20 +104,22 @@ export function InventoryTable() {
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
   const [search, setSearch] = useState("");
   const { workspace } = useWorkspace();
+  const { month } = useMonth();
 
   // Pass both workspace and search term to the Convex query
   const inventoryArgs = useMemo(
     () => ({
       ...(workspace === ALL ? {} : { customerName: workspace }),
       ...(search.trim() ? { searchTerm: search.trim() } : {}),
+      orderDate: Number(month),
     }),
-    [workspace, search],
+    [workspace, search, month],
   );
   const inventory = useQuery(
     api.inventory.inventory.listInventory,
     inventoryArgs,
   );
-  const deleteLineItem = useMutation(api.inventory.item.deleteLineItem);
+  const deleteLineItem = useMutation(api.inventory.stocks.deleteStockEntry);
   const isLoading = inventory === undefined;
 
   // `listInventory` returns the joined documents; flatten them into table rows.
@@ -124,6 +128,7 @@ export function InventoryTable() {
       (inventory ?? []).map<InventoryRow>((line) => ({
         id: line._id as Id<"lineItems">,
         supplierName: line.supplierName ?? "—",
+        supplierId: line.item?.supplierId ?? null,
         customerName: line.customerName ?? "",
         customerId: line.customerId,
         itemId: line.itemId,
@@ -337,7 +342,7 @@ export function InventoryTable() {
         }
         onConfirm={() => {
           if (!deleteTarget) return;
-          void deleteLineItem({ itemId: deleteTarget.id });
+          void deleteLineItem({ lineItemId: deleteTarget.id });
         }}
       />
 

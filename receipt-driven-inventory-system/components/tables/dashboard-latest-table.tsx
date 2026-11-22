@@ -4,6 +4,7 @@ import { useQuery } from "convex/react";
 import { useMemo } from "react";
 
 import { useWorkspace } from "@/components/workspace";
+import { useMonth } from "@/components/month";
 import { Skeleton } from "../ui/skeleton";
 import {
   Table,
@@ -13,13 +14,21 @@ import {
   TableBody,
   TableCell,
 } from "../ui/table";
-import { ALL, formatQuantity, formatDate } from "../util/functions";
+import { ALL, formatQuantity, formatDate, monthStartTimestamp } from "../util/functions";
 
 export function LatestItemsTable() {
   const { workspace } = useWorkspace();
-  const latestItemArgs = useMemo<{ customerName?: string }>(
-    () => (workspace === ALL ? {} : { customerName: workspace }),
-    [workspace],
+  const { month } = useMonth();
+
+  const latestItemArgs = useMemo(
+    () =>
+      workspace === ALL
+        ? ("skip" as const)
+        : {
+            customerName: workspace,
+            orderDate: monthStartTimestamp(month),
+          },
+    [workspace, month],
   );
 
   const latestItems = useQuery(

@@ -5,8 +5,9 @@ import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 
 import { useWorkspace } from "@/components/workspace";
+import { useMonth } from "@/components/month";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ALL } from "@/components/util/functions";
+import { ALL, monthStartTimestamp } from "@/components/util/functions";
 
 /** Monochrome ramp from the theme, darkest slice first. */
 const STOCK_COLORS = [
@@ -52,10 +53,19 @@ function StockDonutSkeleton() {
 /** Donut: each slice is a category's share of the tracked stock value. */
 export function StockDonutChart() {
   const { workspace } = useWorkspace();
-  const stockArgs = useMemo<{ customerName?: string }>(
-    () => (workspace === ALL ? {} : { customerName: workspace }),
-    [workspace],
+  const { month } = useMonth();
+
+  const stockArgs = useMemo(
+    () =>
+      workspace === ALL
+        ? ("skip" as const)
+        : {
+            customerName: workspace,
+            orderDate: monthStartTimestamp(month),
+          },
+    [workspace, month],
   );
+
   const stock = useQuery(api.inventory.inventory.getStockByCategory, stockArgs);
 
   if (stock === undefined) {

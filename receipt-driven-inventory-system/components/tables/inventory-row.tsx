@@ -144,12 +144,12 @@ function ViewStockDialog({
   item: InventoryRow;
 }) {
   const entries = useQuery(
-    api.inventory.items.listStockEntries,
+    api.inventory.stocks.listStockEntries,
     open ? { itemId: item.itemId, customerId: item.customerId } : "skip",
   );
-  const addStockEntry = useMutation(api.inventory.items.addStockEntry);
-  const updateStockEntry = useMutation(api.inventory.items.updateStockEntry);
-  const deleteStockEntry = useMutation(api.inventory.items.deleteStockEntry);
+  const addStockEntry = useMutation(api.inventory.stocks.addStockEntry);
+  const updateStockEntry = useMutation(api.inventory.stocks.updateStockEntry);
+  const deleteStockEntry = useMutation(api.inventory.stocks.deleteStockEntry);
 
   const [adding, setAdding] = useState(false);
   const [editingId, setEditingId] = useState<Id<"lineItems"> | null>(null);
@@ -324,7 +324,7 @@ function ViewStockDialog({
         onConfirm={() => {
           if (!deleteTarget) return;
 
-          void deleteStockEntry({ itemId: deleteTarget.id });
+          void deleteStockEntry({ lineItemId: deleteTarget.id });
           setDeleteTarget(null);
         }}
       />

@@ -6,6 +6,7 @@ import {
 } from "@/components/structure/page-skeletons";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
+  Table,
   TableHeader,
   TableRow,
   TableHead,
@@ -13,7 +14,6 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { cn } from "cn";
-import { Table } from "lucide-react";
 
 export default function Loading() {
   return (

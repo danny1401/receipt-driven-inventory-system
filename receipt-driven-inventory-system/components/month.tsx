@@ -89,15 +89,16 @@ function storeMonth(next: string) {
 }
 
 export function MonthProvider({ children }: { children: ReactNode }) {
-  const { workspace } = useWorkspace();
-  const monthArgs = useMemo<{ customerName?: string }>(
-    () => (workspace === ALL ? {} : { customerName: workspace }),
-    [workspace],
+  const activePeriods = useQuery(api.inventory.inventory.getActivePeriods);
+  
+  const months = useMemo(
+    () =>
+      activePeriods?.map(
+        ({ year, month }) => `${year}-${String(month).padStart(2, "0")}`,
+      ),
+    [activePeriods],
   );
-  const months = useQuery(
-    api.inventory.invoices.listInvoiceMonths,
-    monthArgs,
-  );
+
   const selected = useSyncExternalStore(
     subscribe,
     getSnapshot,
