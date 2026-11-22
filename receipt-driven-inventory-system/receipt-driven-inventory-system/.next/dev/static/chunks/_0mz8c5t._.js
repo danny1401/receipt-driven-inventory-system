@@ -92,8 +92,8 @@ const EMPTY_FORM = {
     itemName: "",
     sku: "",
     category: "",
-    supplierName: "",
-    customerName: "",
+    customerId: "",
+    supplierId: "",
     quantity: "",
     quantityUnit: "",
     unitPrice: ""
@@ -104,8 +104,8 @@ const EMPTY_FORM = {
         itemName: text(item.itemName),
         sku: item.sku,
         category: text(item.category),
-        supplierName: text(item.supplierName),
-        customerName: text(item.customerName),
+        customerId: item.customerId ?? "",
+        supplierId: item.supplierId ?? "",
         quantity: item.quantity === null ? "" : String(item.quantity),
         quantityUnit: item.quantityUnit ?? "",
         unitPrice: item.unitPrice === null ? "" : String(item.unitPrice)
@@ -131,17 +131,17 @@ function AddItemDialog({ open: externalOpen, onOpenChange: externalOnOpenChange,
                 onSaved: ()=>setIsOpen(false)
             }, isOpen ? item?.id ?? "new" : "closed", false, {
                 fileName: "[project]/components/dialog/add-item-dialog.tsx",
-                lineNumber: 119,
+                lineNumber: 137,
                 columnNumber: 9
             }, this)
         }, void 0, false, {
             fileName: "[project]/components/dialog/add-item-dialog.tsx",
-            lineNumber: 118,
+            lineNumber: 136,
             columnNumber: 7
         }, this)
     }, void 0, false, {
         fileName: "[project]/components/dialog/add-item-dialog.tsx",
-        lineNumber: 117,
+        lineNumber: 135,
         columnNumber: 5
     }, this);
 }
@@ -157,28 +157,74 @@ function AddItemForm({ item, onSaved }) {
         category: `${idPrefix}-category`,
         categories: `${idPrefix}-categories`,
         supplier: `${idPrefix}-supplier`,
-        suppliers: `${idPrefix}-suppliers`,
         customer: `${idPrefix}-customer`,
-        customers: `${idPrefix}-customers`,
         quantity: `${idPrefix}-quantity`,
         unit: `${idPrefix}-unit`,
         price: `${idPrefix}-price`
     };
     const [form, setForm] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])({
-        "AddItemForm.useState": ()=>item ? formFromItem(item) : {
-                ...EMPTY_FORM,
-                customerName: workspace === __TURBOPACK__imported__module__$5b$project$5d2f$components$2f$util$2f$functions$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["ALL"] ? "" : workspace
-            }
+        "AddItemForm.useState": ()=>item ? formFromItem(item) : EMPTY_FORM
     }["AddItemForm.useState"]);
     const [errors, setErrors] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])({});
     const [formError, setFormError] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(null);
     const [pending, setPending] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(false);
     const isEditing = item !== null;
     const options = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$convex$2f$dist$2f$esm$2f$react$2f$client$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useQuery"])(__TURBOPACK__imported__module__$5b$project$5d2f$convex$2f$_generated$2f$api$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["api"].inventory.helpers.getItemFormOptions);
-    const ensureSupplier = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$convex$2f$dist$2f$esm$2f$react$2f$client$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useMutation"])(__TURBOPACK__imported__module__$5b$project$5d2f$convex$2f$_generated$2f$api$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["api"].inventory.helpers.ensureSupplier);
-    const ensureCustomer = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$convex$2f$dist$2f$esm$2f$react$2f$client$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useMutation"])(__TURBOPACK__imported__module__$5b$project$5d2f$convex$2f$_generated$2f$api$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["api"].inventory.helpers.ensureCustomer);
-    const addItem = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$convex$2f$dist$2f$esm$2f$react$2f$client$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useMutation"])(__TURBOPACK__imported__module__$5b$project$5d2f$convex$2f$_generated$2f$api$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["api"].inventory.item.addItem);
-    const updateItem = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$convex$2f$dist$2f$esm$2f$react$2f$client$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useMutation"])(__TURBOPACK__imported__module__$5b$project$5d2f$convex$2f$_generated$2f$api$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["api"].inventory.item.updateItem);
+    const customers = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$convex$2f$dist$2f$esm$2f$react$2f$client$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useQuery"])(__TURBOPACK__imported__module__$5b$project$5d2f$convex$2f$_generated$2f$api$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["api"].inventory.customers.getRelevantCustomers);
+    const suppliers = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$convex$2f$dist$2f$esm$2f$react$2f$client$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useQuery"])(__TURBOPACK__imported__module__$5b$project$5d2f$convex$2f$_generated$2f$api$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["api"].inventory.suppliers.getSuppliersByCustomerId, form.customerId ? {
+        customerId: form.customerId
+    } : "skip");
+    const addItemAndStockEntry = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$convex$2f$dist$2f$esm$2f$react$2f$client$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useMutation"])(__TURBOPACK__imported__module__$5b$project$5d2f$convex$2f$_generated$2f$api$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["api"].inventory.items.addItemAndStockEntry);
+    const updateItem = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$convex$2f$dist$2f$esm$2f$react$2f$client$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useMutation"])(__TURBOPACK__imported__module__$5b$project$5d2f$convex$2f$_generated$2f$api$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["api"].inventory.items.updateItem);
+    // Default to the row's customer, then the workspace, then the first one.
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])({
+        "AddItemForm.useEffect": ()=>{
+            if (form.customerId || !customers || customers.length === 0) return;
+            const preferred = customers.find({
+                "AddItemForm.useEffect": (customer)=>customer.customerName === item?.customerName
+            }["AddItemForm.useEffect"]) ?? (workspace === __TURBOPACK__imported__module__$5b$project$5d2f$components$2f$util$2f$functions$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["ALL"] ? undefined : customers.find({
+                "AddItemForm.useEffect": (customer)=>customer.customerName === workspace
+            }["AddItemForm.useEffect"])) ?? customers[0];
+            setForm({
+                "AddItemForm.useEffect": (current)=>current.customerId ? current : {
+                        ...current,
+                        customerId: preferred._id
+                    }
+            }["AddItemForm.useEffect"]);
+        }
+    }["AddItemForm.useEffect"], [
+        customers,
+        form.customerId,
+        item?.customerName,
+        workspace
+    ]);
+    // Keep the supplier valid for the selected customer, preferring the row's
+    // existing supplier when editing.
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])({
+        "AddItemForm.useEffect": ()=>{
+            if (!suppliers) return;
+            setForm({
+                "AddItemForm.useEffect": (current)=>{
+                    if (current.supplierId && suppliers.some({
+                        "AddItemForm.useEffect": (supplier)=>supplier._id === current.supplierId
+                    }["AddItemForm.useEffect"])) {
+                        return current;
+                    }
+                    const preferred = suppliers.find({
+                        "AddItemForm.useEffect": (supplier)=>supplier.supplierName === item?.supplierName
+                    }["AddItemForm.useEffect"]) ?? suppliers[0];
+                    const supplierId = preferred?._id ?? "";
+                    return supplierId === current.supplierId ? current : {
+                        ...current,
+                        supplierId
+                    };
+                }
+            }["AddItemForm.useEffect"]);
+        }
+    }["AddItemForm.useEffect"], [
+        suppliers,
+        item?.supplierName
+    ]);
     const quantity = Number(form.quantity);
     const unitPrice = Number(form.unitPrice);
     const hasNumbers = form.quantity.trim() !== "" && form.unitPrice.trim() !== "" && Number.isFinite(quantity) && Number.isFinite(unitPrice);
@@ -199,6 +245,38 @@ function AddItemForm({ item, onSaved }) {
                 return next;
             });
         };
+    const handleCustomerChange = (value)=>{
+        const customerId = value ?? "";
+        setForm((current)=>({
+                ...current,
+                customerId,
+                supplierId: ""
+            }));
+        setErrors((current)=>{
+            if (!current.customerId && !current.supplierId) return current;
+            const next = {
+                ...current
+            };
+            delete next.customerId;
+            delete next.supplierId;
+            return next;
+        });
+    };
+    const handleSupplierChange = (value)=>{
+        const supplierId = value ?? "";
+        setForm((current)=>({
+                ...current,
+                supplierId
+            }));
+        setErrors((current)=>{
+            if (!current.supplierId) return current;
+            const next = {
+                ...current
+            };
+            delete next.supplierId;
+            return next;
+        });
+    };
     const handleSubmit = async (event)=>{
         event.preventDefault();
         if (pending) return;
@@ -206,15 +284,15 @@ function AddItemForm({ item, onSaved }) {
             itemName: form.itemName.trim(),
             sku: form.sku.trim(),
             category: form.category.trim(),
-            supplierName: form.supplierName.trim(),
-            customerName: form.customerName.trim(),
+            customerId: form.customerId,
+            supplierId: form.supplierId,
             quantityUnit: form.quantityUnit.trim()
         };
         const nextErrors = {};
         if (!values.itemName) nextErrors.itemName = "Enter the item name.";
         if (!values.category) nextErrors.category = "Enter a category.";
-        if (!values.supplierName) nextErrors.supplierName = "Enter a supplier.";
-        if (!values.customerName) nextErrors.customerName = "Enter a customer.";
+        if (!values.customerId) nextErrors.customerId = "Choose a customer.";
+        if (!values.supplierId) nextErrors.supplierId = "Choose a supplier.";
         if (!values.quantityUnit) nextErrors.quantityUnit = "Enter a unit, e.g. kg.";
         if (form.quantity.trim() === "" || !Number.isFinite(quantity) || (isEditing ? quantity < 0 : quantity <= 0)) {
             nextErrors.quantity = isEditing ? "Enter a quantity of 0 or more." : "Enter a quantity above 0.";
@@ -224,33 +302,22 @@ function AddItemForm({ item, onSaved }) {
         }
         setErrors(nextErrors);
         if (Object.keys(nextErrors).length > 0) return;
+        const { customerId, supplierId } = values;
+        if (!customerId || !supplierId) return;
         setPending(true);
         setFormError(null);
         try {
-            // Both mutations need existing supplier/customer rows, so resolve both
-            // names (creating them on first use) before writing the line item.
-            const [supplierId, customerId] = await Promise.all([
-                ensureSupplier({
-                    supplierName: values.supplierName
-                }),
-                ensureCustomer({
-                    customerName: values.customerName
-                })
-            ]);
             if (item) {
                 await updateItem({
-                    itemId: item.id,
+                    itemId: item.itemId,
                     customerId,
                     supplierId,
                     sku: values.sku || null,
                     itemName: values.itemName,
-                    category: values.category,
-                    quantity,
-                    quantityUnit: values.quantityUnit,
-                    unitPrice
+                    category: values.category
                 });
             } else {
-                await addItem({
+                await addItemAndStockEntry({
                     sku: values.sku || null,
                     itemName: values.itemName,
                     category: values.category,
@@ -278,20 +345,20 @@ function AddItemForm({ item, onSaved }) {
                         children: isEditing ? "Edit item" : "Add item"
                     }, void 0, false, {
                         fileName: "[project]/components/dialog/add-item-dialog.tsx",
-                        lineNumber: 284,
+                        lineNumber: 363,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$dialog$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["DialogDescription"], {
                         children: isEditing ? "Update this line item. Changing the item name, category, or supplier also updates the shared item record." : "Record a purchase by hand. Suppliers and customers that aren’t in the list yet are created when you save."
                     }, void 0, false, {
                         fileName: "[project]/components/dialog/add-item-dialog.tsx",
-                        lineNumber: 285,
+                        lineNumber: 364,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/components/dialog/add-item-dialog.tsx",
-                lineNumber: 283,
+                lineNumber: 362,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("form", {
@@ -310,7 +377,7 @@ function AddItemForm({ item, onSaved }) {
                                         children: "Item name"
                                     }, void 0, false, {
                                         fileName: "[project]/components/dialog/add-item-dialog.tsx",
-                                        lineNumber: 295,
+                                        lineNumber: 374,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
@@ -322,20 +389,20 @@ function AddItemForm({ item, onSaved }) {
                                         autoComplete: "off"
                                     }, void 0, false, {
                                         fileName: "[project]/components/dialog/add-item-dialog.tsx",
-                                        lineNumber: 296,
+                                        lineNumber: 375,
                                         columnNumber: 13
                                     }, this),
                                     errors.itemName && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$field$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["FieldError"], {
                                         children: errors.itemName
                                     }, void 0, false, {
                                         fileName: "[project]/components/dialog/add-item-dialog.tsx",
-                                        lineNumber: 304,
+                                        lineNumber: 383,
                                         columnNumber: 33
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/components/dialog/add-item-dialog.tsx",
-                                lineNumber: 294,
+                                lineNumber: 373,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -348,7 +415,7 @@ function AddItemForm({ item, onSaved }) {
                                                 children: "SKU (optional)"
                                             }, void 0, false, {
                                                 fileName: "[project]/components/dialog/add-item-dialog.tsx",
-                                                lineNumber: 309,
+                                                lineNumber: 388,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
@@ -359,13 +426,13 @@ function AddItemForm({ item, onSaved }) {
                                                 autoComplete: "off"
                                             }, void 0, false, {
                                                 fileName: "[project]/components/dialog/add-item-dialog.tsx",
-                                                lineNumber: 310,
+                                                lineNumber: 389,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/components/dialog/add-item-dialog.tsx",
-                                        lineNumber: 308,
+                                        lineNumber: 387,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$field$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Field"], {
@@ -376,7 +443,7 @@ function AddItemForm({ item, onSaved }) {
                                                 children: "Category"
                                             }, void 0, false, {
                                                 fileName: "[project]/components/dialog/add-item-dialog.tsx",
-                                                lineNumber: 320,
+                                                lineNumber: 399,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
@@ -389,26 +456,26 @@ function AddItemForm({ item, onSaved }) {
                                                 autoComplete: "off"
                                             }, void 0, false, {
                                                 fileName: "[project]/components/dialog/add-item-dialog.tsx",
-                                                lineNumber: 321,
+                                                lineNumber: 400,
                                                 columnNumber: 15
                                             }, this),
                                             errors.category && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$field$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["FieldError"], {
                                                 children: errors.category
                                             }, void 0, false, {
                                                 fileName: "[project]/components/dialog/add-item-dialog.tsx",
-                                                lineNumber: 330,
+                                                lineNumber: 409,
                                                 columnNumber: 35
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/components/dialog/add-item-dialog.tsx",
-                                        lineNumber: 319,
+                                        lineNumber: 398,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/components/dialog/add-item-dialog.tsx",
-                                lineNumber: 307,
+                                lineNumber: 386,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -422,7 +489,7 @@ function AddItemForm({ item, onSaved }) {
                                                 children: "Supplier"
                                             }, void 0, false, {
                                                 fileName: "[project]/components/dialog/add-item-dialog.tsx",
-                                                lineNumber: 336,
+                                                lineNumber: 415,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
@@ -435,20 +502,20 @@ function AddItemForm({ item, onSaved }) {
                                                 autoComplete: "off"
                                             }, void 0, false, {
                                                 fileName: "[project]/components/dialog/add-item-dialog.tsx",
-                                                lineNumber: 337,
+                                                lineNumber: 416,
                                                 columnNumber: 15
                                             }, this),
                                             errors.supplierName && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$field$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["FieldError"], {
                                                 children: errors.supplierName
                                             }, void 0, false, {
                                                 fileName: "[project]/components/dialog/add-item-dialog.tsx",
-                                                lineNumber: 347,
+                                                lineNumber: 426,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/components/dialog/add-item-dialog.tsx",
-                                        lineNumber: 335,
+                                        lineNumber: 414,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$field$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Field"], {
@@ -459,7 +526,7 @@ function AddItemForm({ item, onSaved }) {
                                                 children: "Customer"
                                             }, void 0, false, {
                                                 fileName: "[project]/components/dialog/add-item-dialog.tsx",
-                                                lineNumber: 352,
+                                                lineNumber: 431,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
@@ -472,26 +539,26 @@ function AddItemForm({ item, onSaved }) {
                                                 autoComplete: "off"
                                             }, void 0, false, {
                                                 fileName: "[project]/components/dialog/add-item-dialog.tsx",
-                                                lineNumber: 353,
+                                                lineNumber: 432,
                                                 columnNumber: 15
                                             }, this),
                                             errors.customerName && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$field$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["FieldError"], {
                                                 children: errors.customerName
                                             }, void 0, false, {
                                                 fileName: "[project]/components/dialog/add-item-dialog.tsx",
-                                                lineNumber: 363,
+                                                lineNumber: 442,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/components/dialog/add-item-dialog.tsx",
-                                        lineNumber: 351,
+                                        lineNumber: 430,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/components/dialog/add-item-dialog.tsx",
-                                lineNumber: 334,
+                                lineNumber: 413,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -505,7 +572,7 @@ function AddItemForm({ item, onSaved }) {
                                                 children: "Quantity"
                                             }, void 0, false, {
                                                 fileName: "[project]/components/dialog/add-item-dialog.tsx",
-                                                lineNumber: 370,
+                                                lineNumber: 449,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
@@ -520,20 +587,20 @@ function AddItemForm({ item, onSaved }) {
                                                 "aria-invalid": Boolean(errors.quantity)
                                             }, void 0, false, {
                                                 fileName: "[project]/components/dialog/add-item-dialog.tsx",
-                                                lineNumber: 371,
+                                                lineNumber: 450,
                                                 columnNumber: 15
                                             }, this),
                                             errors.quantity && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$field$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["FieldError"], {
                                                 children: errors.quantity
                                             }, void 0, false, {
                                                 fileName: "[project]/components/dialog/add-item-dialog.tsx",
-                                                lineNumber: 382,
+                                                lineNumber: 461,
                                                 columnNumber: 35
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/components/dialog/add-item-dialog.tsx",
-                                        lineNumber: 369,
+                                        lineNumber: 448,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$field$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Field"], {
@@ -544,7 +611,7 @@ function AddItemForm({ item, onSaved }) {
                                                 children: "Unit"
                                             }, void 0, false, {
                                                 fileName: "[project]/components/dialog/add-item-dialog.tsx",
-                                                lineNumber: 386,
+                                                lineNumber: 465,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
@@ -556,26 +623,26 @@ function AddItemForm({ item, onSaved }) {
                                                 autoComplete: "off"
                                             }, void 0, false, {
                                                 fileName: "[project]/components/dialog/add-item-dialog.tsx",
-                                                lineNumber: 387,
+                                                lineNumber: 466,
                                                 columnNumber: 15
                                             }, this),
                                             errors.quantityUnit && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$field$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["FieldError"], {
                                                 children: errors.quantityUnit
                                             }, void 0, false, {
                                                 fileName: "[project]/components/dialog/add-item-dialog.tsx",
-                                                lineNumber: 396,
+                                                lineNumber: 475,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/components/dialog/add-item-dialog.tsx",
-                                        lineNumber: 385,
+                                        lineNumber: 464,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/components/dialog/add-item-dialog.tsx",
-                                lineNumber: 368,
+                                lineNumber: 447,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -589,7 +656,7 @@ function AddItemForm({ item, onSaved }) {
                                                 children: "Unit price (kr)"
                                             }, void 0, false, {
                                                 fileName: "[project]/components/dialog/add-item-dialog.tsx",
-                                                lineNumber: 403,
+                                                lineNumber: 482,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
@@ -604,20 +671,20 @@ function AddItemForm({ item, onSaved }) {
                                                 "aria-invalid": Boolean(errors.unitPrice)
                                             }, void 0, false, {
                                                 fileName: "[project]/components/dialog/add-item-dialog.tsx",
-                                                lineNumber: 404,
+                                                lineNumber: 483,
                                                 columnNumber: 15
                                             }, this),
                                             errors.unitPrice && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$field$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["FieldError"], {
                                                 children: errors.unitPrice
                                             }, void 0, false, {
                                                 fileName: "[project]/components/dialog/add-item-dialog.tsx",
-                                                lineNumber: 415,
+                                                lineNumber: 494,
                                                 columnNumber: 36
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/components/dialog/add-item-dialog.tsx",
-                                        lineNumber: 402,
+                                        lineNumber: 481,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$field$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Field"], {
@@ -626,7 +693,7 @@ function AddItemForm({ item, onSaved }) {
                                                 children: "Total"
                                             }, void 0, false, {
                                                 fileName: "[project]/components/dialog/add-item-dialog.tsx",
-                                                lineNumber: 419,
+                                                lineNumber: 498,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -637,7 +704,7 @@ function AddItemForm({ item, onSaved }) {
                                                         children: total.toFixed(2)
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/dialog/add-item-dialog.tsx",
-                                                        lineNumber: 424,
+                                                        lineNumber: 503,
                                                         columnNumber: 17
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -645,31 +712,31 @@ function AddItemForm({ item, onSaved }) {
                                                         children: "kr"
                                                     }, void 0, false, {
                                                         fileName: "[project]/components/dialog/add-item-dialog.tsx",
-                                                        lineNumber: 425,
+                                                        lineNumber: 504,
                                                         columnNumber: 17
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/components/dialog/add-item-dialog.tsx",
-                                                lineNumber: 420,
+                                                lineNumber: 499,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/components/dialog/add-item-dialog.tsx",
-                                        lineNumber: 418,
+                                        lineNumber: 497,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/components/dialog/add-item-dialog.tsx",
-                                lineNumber: 401,
+                                lineNumber: 480,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/components/dialog/add-item-dialog.tsx",
-                        lineNumber: 293,
+                        lineNumber: 372,
                         columnNumber: 9
                     }, this),
                     formError && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -678,7 +745,7 @@ function AddItemForm({ item, onSaved }) {
                         children: formError
                     }, void 0, false, {
                         fileName: "[project]/components/dialog/add-item-dialog.tsx",
-                        lineNumber: 432,
+                        lineNumber: 511,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$dialog$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["DialogFooter"], {
@@ -689,13 +756,13 @@ function AddItemForm({ item, onSaved }) {
                                     variant: "outline"
                                 }, void 0, false, {
                                     fileName: "[project]/components/dialog/add-item-dialog.tsx",
-                                    lineNumber: 438,
+                                    lineNumber: 517,
                                     columnNumber: 32
                                 }, this),
                                 children: "Cancel"
                             }, void 0, false, {
                                 fileName: "[project]/components/dialog/add-item-dialog.tsx",
-                                lineNumber: 438,
+                                lineNumber: 517,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -706,34 +773,34 @@ function AddItemForm({ item, onSaved }) {
                                         className: "animate-spin"
                                     }, void 0, false, {
                                         fileName: "[project]/components/dialog/add-item-dialog.tsx",
-                                        lineNumber: 443,
+                                        lineNumber: 522,
                                         columnNumber: 15
                                     }, this) : isEditing ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$pencil$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__PencilIcon$3e$__["PencilIcon"], {}, void 0, false, {
                                         fileName: "[project]/components/dialog/add-item-dialog.tsx",
-                                        lineNumber: 445,
+                                        lineNumber: 524,
                                         columnNumber: 15
                                     }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$plus$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__PlusIcon$3e$__["PlusIcon"], {}, void 0, false, {
                                         fileName: "[project]/components/dialog/add-item-dialog.tsx",
-                                        lineNumber: 447,
+                                        lineNumber: 526,
                                         columnNumber: 15
                                     }, this),
                                     pending ? isEditing ? "Saving…" : "Adding…" : isEditing ? "Save changes" : "Add item"
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/components/dialog/add-item-dialog.tsx",
-                                lineNumber: 441,
+                                lineNumber: 520,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/components/dialog/add-item-dialog.tsx",
-                        lineNumber: 437,
+                        lineNumber: 516,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/components/dialog/add-item-dialog.tsx",
-                lineNumber: 292,
+                lineNumber: 371,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("datalist", {
@@ -742,12 +809,12 @@ function AddItemForm({ item, onSaved }) {
                         value: category
                     }, category, false, {
                         fileName: "[project]/components/dialog/add-item-dialog.tsx",
-                        lineNumber: 462,
+                        lineNumber: 541,
                         columnNumber: 11
                     }, this))
             }, void 0, false, {
                 fileName: "[project]/components/dialog/add-item-dialog.tsx",
-                lineNumber: 460,
+                lineNumber: 539,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("datalist", {
@@ -756,12 +823,12 @@ function AddItemForm({ item, onSaved }) {
                         value: supplier
                     }, supplier, false, {
                         fileName: "[project]/components/dialog/add-item-dialog.tsx",
-                        lineNumber: 467,
+                        lineNumber: 546,
                         columnNumber: 11
                     }, this))
             }, void 0, false, {
                 fileName: "[project]/components/dialog/add-item-dialog.tsx",
-                lineNumber: 465,
+                lineNumber: 544,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("datalist", {
@@ -770,28 +837,28 @@ function AddItemForm({ item, onSaved }) {
                         value: customer
                     }, customer, false, {
                         fileName: "[project]/components/dialog/add-item-dialog.tsx",
-                        lineNumber: 472,
+                        lineNumber: 551,
                         columnNumber: 11
                     }, this))
             }, void 0, false, {
                 fileName: "[project]/components/dialog/add-item-dialog.tsx",
-                lineNumber: 470,
+                lineNumber: 549,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/components/dialog/add-item-dialog.tsx",
-        lineNumber: 282,
+        lineNumber: 361,
         columnNumber: 5
     }, this);
 }
-_s1(AddItemForm, "YyqhL9RmrVU7KuBL2g45l34bpGo=", false, function() {
+_s1(AddItemForm, "3Fh0XFddW4Df7cUK239gGXNpJdc=", false, function() {
     return [
         __TURBOPACK__imported__module__$5b$project$5d2f$components$2f$workspace$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useWorkspace"],
         __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useId"],
         __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$convex$2f$dist$2f$esm$2f$react$2f$client$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useQuery"],
-        __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$convex$2f$dist$2f$esm$2f$react$2f$client$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useMutation"],
-        __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$convex$2f$dist$2f$esm$2f$react$2f$client$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useMutation"],
+        __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$convex$2f$dist$2f$esm$2f$react$2f$client$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useQuery"],
+        __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$convex$2f$dist$2f$esm$2f$react$2f$client$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useQuery"],
         __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$convex$2f$dist$2f$esm$2f$react$2f$client$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useMutation"],
         __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$convex$2f$dist$2f$esm$2f$react$2f$client$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useMutation"]
     ];
