@@ -1,6 +1,5 @@
 import { v } from "convex/values";
 import { mutation, query } from "../_generated/server";
-import { Id } from "../_generated/dataModel";
 import * as Item from "../model/item";
 import * as Customer from "../model/customer";
 import * as Supplier from "../model/supplier";
@@ -18,37 +17,6 @@ export const getItem = query({
   },
 });
 
-// Get total items this month
-export const totalItems = query({
-  args: {},
-  handler: async (ctx) => {
-    // Get the customer IDs this user is allowed to see
-    const allowedCustomerIds = await Customer.getAllowedCustomerIds(ctx);
-    if (allowedCustomerIds.length === 0) {
-      return 0; // Return early if they have access to nothing
-    }
-
-    // Fetch invoices for each allowed customer in parallel using the index
-    const results = await Promise.all(
-      allowedCustomerIds.map(async (customerId) => {
-        return await ctx.db
-          .query("lineItems")
-          .withIndex("by_customerId", (q) => 
-            q.eq("customerId", customerId as Id<"customers">)
-          )
-          .collect();
-      })
-    );
-
-    // Flatten the arrays and get the total count
-    const totalCount = results.flat().length;
-
-    return totalCount;
-  },
-});
-
-// Add Item?
-
 // Add Item and Stock Entry
 export const addItemAndStockEntry = mutation({
   args: {
@@ -58,7 +26,7 @@ export const addItemAndStockEntry = mutation({
     itemName: v.string(),
     category: v.string(),
 
-    orderDate: v.number(),
+    orderDate: v.optional(v.number()),
     quantity: v.number(),
     quantityUnit: v.string(),
     unitPrice: v.number(),
@@ -86,6 +54,7 @@ export const addItemAndStockEntry = mutation({
     await Stock.createStockEntry(ctx, {
       ...args,
       itemId,
+      orderDate: Date.now(),
     });
 
     return {

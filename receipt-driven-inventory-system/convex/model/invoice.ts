@@ -1,6 +1,55 @@
+import { PaginationOptions } from "convex/server";
 import { Doc, Id } from "../_generated/dataModel";
-import { QueryCtx } from "../_generated/server";
-import { INVENTORY_LIMIT } from "../inventory/helpers";
+import { MutationCtx, QueryCtx } from "../_generated/server";
+import { INVENTORY_LIMIT, MAX_PAGE_SIZE } from "../inventory/helpers";
+
+// FindInvoice
+export async function findInvoiceByFilename(ctx: QueryCtx, fileName: string) {
+  return await ctx.db
+    .query("invoices")
+    .withIndex("by_fileName", (q) => q.eq("fileName", fileName))
+    .unique();
+}
+
+//
+export async function readInvoices(
+  ctx: QueryCtx,
+  data: {
+    searchTerm: string | undefined;
+    customerId: Id<"customers">;
+    start: number;
+    end: number;
+    paginationOpts: PaginationOptions;
+  },
+): Promise<Doc<"invoices">[]> {
+  const boundedOpts: PaginationOptions = {
+    ...data.paginationOpts,
+    numItems: Math.min(data.paginationOpts.numItems, MAX_PAGE_SIZE),
+    maximumRowsRead: data.paginationOpts.maximumRowsRead
+      ? Math.min(data.paginationOpts.maximumRowsRead, MAX_PAGE_SIZE * 2)
+      : MAX_PAGE_SIZE * 2,
+  };
+
+  const trimmedSearch = data.searchTerm?.trim();
+  if (trimmedSearch) {
+    const searchResult = await ctx.db
+      .query("invoices")
+      .withSearchIndex("search_invoices", (q) =>
+        q.search("searchField", trimmedSearch),
+      )
+      .paginate(boundedOpts);
+
+    return searchResult.page;
+  }
+
+  // Fallback indexed query for a single customer within the target UTC month
+  return await getMonthlyInvoicesByCustomerId(ctx, {
+    customerId: data.customerId,
+    start: data.start,
+    end: data.end,
+    paginationOpts: boundedOpts,
+  });
+}
 
 /** Invoices for the given customers, newest first, capped at `limit`. */
 export async function readInvoicesForCustomers(
@@ -86,4 +135,75 @@ export async function hydrateInvoice(ctx: any, invoice: Doc<"invoices">) {
     supplier: supplier ?? null,
     supplierName: supplier?.supplierName ?? null,
   };
+}
+
+export async function getMonthlyInvoicesByCustomerId(
+  ctx: QueryCtx,
+  data: {
+    customerId: Id<"customers">;
+    start: number;
+    end: number;
+    paginationOpts?: PaginationOptions;
+  },
+): Promise<Doc<"invoices">[]> {  
+  // Get monthly line items
+  const baseQuery = ctx.db
+    .query("invoices")
+    .withIndex("by_customerId_and_orderDate", (q) =>
+      q
+        .eq("customerId", data.customerId)
+        .gte("orderDate", data.start)
+        .lt("orderDate", data.end),
+    );
+
+  if (data.paginationOpts) {
+    const result = await baseQuery.paginate(data.paginationOpts);
+
+    if (result.page.length === 0 && result.isDone) {
+      throw new Error("No invoices found.");
+    }
+
+    return result.page;
+  }
+
+  const result = await baseQuery.collect();
+
+  if (result.length === 0) {
+    throw new Error("No invoices found.");
+  }
+
+  return result;
+}
+
+// Create Invoice
+export async function createInvoice(
+  ctx: MutationCtx,
+  data: {
+    fileName: string;
+    storageId: Id<"_storage">;
+    createdAt: number;
+    updatedAt: number;
+    status: string;
+    orderId: string | null;
+    orderDate: number | null;
+    deliveringDate: string | null;
+    customerId: Id<"customers">;
+    supplierId: Id<"suppliers">;
+    sum: number | null;
+  },
+) {
+  await ctx.db.insert("invoices", {
+    fileName: data.fileName,
+    storageId: data.storageId,
+    createdAt: data.createdAt,
+    updatedAt: data.updatedAt,
+    status: data.status,
+    orderId: data.orderId,
+    orderDate: data.orderDate,
+    deliveringDate: data.deliveringDate,
+    supplierId: data.supplierId,
+    customerId: data.customerId,
+    sum: data.sum,
+    searchField: data.fileName.toLowerCase(),
+  });
 }

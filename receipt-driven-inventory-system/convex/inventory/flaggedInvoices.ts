@@ -1,6 +1,5 @@
 import { v } from "convex/values";
 import { mutation, query } from "../_generated/server";
-import { Id } from "../_generated/dataModel";
 import * as Customer from "../model/customer";
 
 // List all flagged invoices
@@ -22,35 +21,6 @@ export const listFlaggedInvoices = query({
       .collect();
 
     return invoices;
-  },
-});
-
-// Get total of all flagged invoices
-export const totalFlaggedInvoices = query({
-  args: {},
-  handler: async (ctx) => {
-    // Get the customer IDs this user is allowed to see
-    const allowedCustomerIds = await Customer.getAllowedCustomerIds(ctx);
-    if (allowedCustomerIds.length === 0) {
-      return 0; // Return early if they have access to nothing
-    }
-
-    // Fetch invoices for each allowed customer in parallel using the index
-    const results = await Promise.all(
-      allowedCustomerIds.map(async (customerId) => {
-        return await ctx.db
-          .query("flaggedInvoices")
-          .withIndex("by_customer", (q) => 
-            q.eq("customerId", customerId as Id<"customers">)
-          )
-          .collect();
-      })
-    );
-
-    // Flatten the arrays and get the total count
-    const totalCount = results.flat().length;
-
-    return totalCount;
   },
 });
 

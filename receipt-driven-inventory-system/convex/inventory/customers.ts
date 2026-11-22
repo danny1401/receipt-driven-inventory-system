@@ -1,10 +1,9 @@
 import { v } from "convex/values";
-import { internalQuery, mutation, query } from "../_generated/server";
+import { mutation, query } from "../_generated/server";
 import * as Customer from "../model/customer";
+import * as Permission from "../model/permission";
 
 // Get
-
-
 
 // Get one customer by id
 export const getCustomerById = query({
@@ -24,12 +23,12 @@ export const getRelevantCustomers = query({
   },
 });
 
-// Ensure customer exists in Convex, creating them if they don't
+// Ensure customer exists in Convex, creating them (and the creator's
+// permission) if they don't.
 export const ensureCustomer = mutation({
   args: {
-    customerId: v.id("customers"),
-    customerOrgId: v.optional(v.string()),
     customerName: v.string(),
+    customerOrgId: v.optional(v.union(v.string(), v.null())),
     searchField: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
@@ -38,16 +37,24 @@ export const ensureCustomer = mutation({
       throw new Error("Customer name is required.");
     }
 
-    const existing = await Customer.getCustomer(ctx, args.customerId);
-    if (existing) {
-      return existing;
+    const userId = await Permission.getCurrentUserId(ctx);
+
+    // Reuse the first row already stored for this restaurant name.
+    const [existingId] = await Customer.findCustomerIds(ctx, customerName);
+    if (existingId) {
+      if (userId) {
+        await Permission.ensurePermission(ctx, userId, existingId);
+      }
+      return await Customer.getCustomer(ctx, existingId);
     }
 
-    return await Customer.createCustomer(ctx, {
-      customerName: customerName,
-      customerOrgId: "",
-      searchField: customerName.toLowerCase(),
+    const customerId = await Customer.createCustomer(ctx, {
+      customerName,
+      customerOrgId: args.customerOrgId ?? null,
+      userId,
     });
+
+    return await Customer.getCustomer(ctx, customerId);
   },
 });
 

@@ -1,4 +1,3 @@
-import { optional } from "better-auth";
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
@@ -15,7 +14,7 @@ export default defineSchema({
     status: v.string(),
 
     orderId: v.union(v.string(), v.null()),
-    orderDate: v.union(v.string(), v.null()),
+    orderDate: v.union(v.number(), v.null()),
     deliveringDate: v.union(v.string(), v.null()),
 
     supplierId: v.id("suppliers"),
@@ -35,7 +34,8 @@ export default defineSchema({
     .index("by_orderId", ["orderId"])
     .index("by_orderDate", ["orderDate"])
     .index("by_customerId", ["customerId"])
-    .index("by_supplierId", ["supplierId"]),
+    .index("by_supplierId", ["supplierId"])
+    .index("by_customerId_and_orderDate", ["customerId", "orderDate"]),
 
   flaggedInvoices: defineTable({
     fileName: v.string(),
@@ -51,8 +51,10 @@ export default defineSchema({
       searchField: "searchField",
     })
     .index("by_fileName", ["fileName"])
+    .index("by_creation", ["createdAt"])
     .index("by_update", ["updatedAt"])
-    .index("by_customer", ["customerId"]),
+    .index("by_customer", ["customerId"])
+    .index("by_customerId_and_creationDate", ["customerId", "createdAt"]),
 
   suppliers: defineTable({
     supplierOrgId: v.union(v.string(), v.null()),
@@ -103,8 +105,8 @@ export default defineSchema({
     userId: v.id("users"),
     customerId: v.id("customers"),
   })
-    .index("by_userId", ["userId"])
-    .index("by_customerId", ["customerId"]),
+    .index("by_customerId", ["customerId"])
+    .index("by_userId_and_customerId", ["userId", "customerId"]),
 
   items: defineTable({
     sku: v.union(v.string(), v.null()),
@@ -129,8 +131,8 @@ export default defineSchema({
     itemId: v.id("items"),
     invoiceId: v.optional(v.id("invoices")),
     customerId: v.id("customers"),
-
-    orderDate: v.number(),
+ 
+    orderDate: v.union(v.number(), v.null()),
     updatedAt: v.number(),
     searchField: v.string(),
   })
@@ -138,9 +140,11 @@ export default defineSchema({
       searchField: "searchField",
       filterFields: ["customerId"],
     })
-    .index("by_itemId_and_customerId", ["itemId", "customerId"])
     .index("by_itemId", ["itemId"])
     .index("by_invoiceId", ["invoiceId"])
     .index("by_customerId", ["customerId"])
+    .index("by_itemId_and_customerId", ["itemId", "customerId"])
+    .index("by_orderDate", ["orderDate"])
+    .index("by_customerId_and_orderDate", ["customerId", "orderDate"])
     .index("by_update", ["updatedAt"]),
 });

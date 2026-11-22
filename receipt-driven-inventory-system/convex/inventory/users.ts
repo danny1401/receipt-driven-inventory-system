@@ -1,6 +1,8 @@
 import { v } from "convex/values";
-import { internalQuery, mutation } from "../_generated/server";
+import { internalMutation, mutation } from "../_generated/server";
 import * as User from "../model/user";
+import * as Customer from "../model/customer";
+import * as Permission from "../model/permission";
 
 // Get user
 
@@ -61,3 +63,54 @@ export const addUser = mutation({
 // Update user
 
 // Delete User
+
+//---------------------------------------
+// PERMISSION
+//---------------------------------------
+
+// Get permission
+
+
+// Grant the signed-in user access to a customer. Safe to call repeatedly, so
+// it doubles as a manual share/backfill endpoint.
+export const AddCustomerPermissions = mutation({
+  args: {
+    customerId: v.id("customers"),
+  },
+  handler: async (ctx, args) => {
+    const userId = await Permission.getCurrentUserId(ctx);
+    if (!userId) {
+      throw new Error("Unauthenticated");
+    }
+
+    await Customer.getCustomer(ctx, args.customerId);
+
+    return await Permission.ensurePermission(ctx, userId, args.customerId);
+  },
+});
+
+// One-off admin helper: grant one user access to every existing customer.
+// Run with `npx convex run inventory/customers:backfillCustomerPermissions`.
+export const backfillCustomerPermissions = internalMutation({
+  args: {
+    userId: v.id("users"),
+  },
+  handler: async (ctx, args) => {
+    let granted = 0;
+
+    for await (const customer of ctx.db.query("customers")) {
+      await Permission.ensurePermission(ctx, args.userId, customer._id);
+      granted++;
+    }
+
+    return granted;
+  },
+});
+
+// Add permission
+
+// Update permission
+
+// Delete permissions
+
+// 

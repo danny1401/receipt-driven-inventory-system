@@ -1,8 +1,8 @@
 import { Doc, Id } from "../_generated/dataModel";
-import { MutationCtx, query, QueryCtx } from "../_generated/server";
+import { MutationCtx, QueryCtx } from "../_generated/server";
 import { CUSTOMER_LIMIT } from "../inventory/helpers";
 import * as User from "../model/user";
-import * as Permissions from "../model/permissions";
+import * as Permissions from "./permission";
 
 export async function validateCustomer(
   ctx: QueryCtx,
@@ -11,6 +11,21 @@ export async function validateCustomer(
   const customer = await Promise.all([ctx.db.get(customerId)]);
 
   if (!customer) throw new Error("Specified customer does not exist.");
+}
+
+export async function findCustomerByOrgId(
+  ctx: QueryCtx,
+  customerOrgId: string,
+) {
+  const customer = await Promise.all([
+    ctx.db.query("customers")
+      .withIndex("by_customerOrgId", (q) => q.eq("customerOrgId", customerOrgId))
+      .unique(),
+  ]);
+
+  if (!customer) throw new Error("Specified customer does not exist.");
+
+  return customer;
 }
 
 export async function getCustomer(ctx: QueryCtx, customerId: Id<"customers">) {
@@ -58,7 +73,7 @@ export async function getAllowedCustomerIds(
   const permissions = await Permissions.getPermissionsByUserId(ctx, user._id);
 
   return [
-    ...new Set(permissions.flat().map((permission) => permission.customerId)),
+    ...new Set(permissions.map((permission) => permission.customerId)),
   ].sort((a, b) => a.localeCompare(b));
 }
 
@@ -105,13 +120,19 @@ export async function createCustomer(
   ctx: MutationCtx,
   data: {
     customerName: string;
-    customerOrgId: string;
-    searchField: string;
+    customerOrgId: string | null;
+    userId?: Id<"users"> | null;
   },
 ) {
-  return await ctx.db.insert("customers", {
+  const customerId = await ctx.db.insert("customers", {
     customerName: data.customerName,
     customerOrgId: data.customerOrgId,
-    searchField: data.searchField || data.customerName.toLowerCase(),
+    searchField: data.customerName.toLowerCase(),
   });
+
+  if (data.userId) {
+    await Permissions.ensurePermission(ctx, data.userId, customerId);
+  }
+
+  return customerId;
 }

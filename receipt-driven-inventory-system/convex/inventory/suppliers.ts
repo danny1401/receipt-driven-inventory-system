@@ -61,6 +61,10 @@ export const ensureSupplier = mutation({
   },
   handler: async (ctx, args) => {
     // FindSupplierByName or OrdId
+    if (!args.supplierName && !args.supplierOrgId) {
+      throw new Error("Supplier is required.");
+    }
+    
 
     const supplierName = args.supplierName.trim();
     if (!supplierName) {

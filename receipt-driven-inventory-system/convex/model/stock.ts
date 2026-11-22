@@ -1,28 +1,34 @@
 import { MutationCtx, QueryCtx } from "../_generated/server";
+import { type PaginationOptions } from "convex/server";
 import { Doc, Id } from "../_generated/dataModel";
-import {
-  INVENTORY_LIMIT,
-  LATEST_LIMIT,
-} from "../inventory/helpers";
+import { LATEST_LIMIT, MAX_PAGE_SIZE } from "../inventory/helpers";
 import * as Customer from "../model/customer";
+import { monthBoundsUtc } from "../lib/date";
 
 /** The newest line items overall, or the newest for one customer name. */
 export async function readLatestLineItems(
   ctx: QueryCtx,
-  customerName?: string,
+  customerId: Id<"customers">,
+  orderDate: number,
 ) {
-  if (customerName === undefined) {
-    return await ctx.db.query("lineItems").order("desc").take(LATEST_LIMIT);
-  }
+  // Validate customerId
+  await Customer.validateCustomer(ctx, customerId);
 
+  // Get month range
+  const { start, end } = monthBoundsUtc(orderDate);
+
+  // Get monthly line items
   const batches = await Promise.all(
-    (await Customer.findCustomerIds(ctx, customerName)).map((customerId) =>
-      ctx.db
-        .query("lineItems")
-        .withIndex("by_customerId", (q) => q.eq("customerId", customerId))
-        .order("desc")
-        .take(LATEST_LIMIT),
-    ),
+    await ctx.db
+      .query("lineItems")
+      .withIndex("by_customerId_and_orderDate", (q) =>
+        q
+          .eq("customerId", customerId)
+          .gte("orderDate", start)
+          .lt("orderDate", end),
+      )
+      .order("desc")
+      .take(LATEST_LIMIT),
   );
 
   return batches
@@ -32,25 +38,43 @@ export async function readLatestLineItems(
 }
 
 /* All line items, or only those belonging to one customer name. */
-export async function readLineItems(ctx: QueryCtx, customerName?: string) {
-  if (customerName === undefined) {
-    return await ctx.db.query("lineItems").take(INVENTORY_LIMIT);
-  }
+export async function readLineItems(
+  ctx: QueryCtx,
+  data: {
+    searchTerm: string | undefined;
+    customerId: Id<"customers">;
+    start: number;
+    end: number;
+    paginationOpts: PaginationOptions;
+  },
+): Promise<Doc<"lineItems">[]> {
+  const boundedOpts: PaginationOptions = {
+    ...data.paginationOpts,
+    numItems: Math.min(data.paginationOpts.numItems, MAX_PAGE_SIZE),
+    maximumRowsRead: data.paginationOpts.maximumRowsRead
+      ? Math.min(data.paginationOpts.maximumRowsRead, MAX_PAGE_SIZE * 2)
+      : MAX_PAGE_SIZE * 2,
+  };
 
-  const rows: Doc<"lineItems">[] = [];
-
-  for (const customerId of await Customer.findCustomerIds(ctx, customerName)) {
-    if (rows.length >= INVENTORY_LIMIT) break;
-
-    const batch = await ctx.db
+  const trimmedSearch = data.searchTerm?.trim();
+  if (trimmedSearch) {
+    const searchResult = await ctx.db
       .query("lineItems")
-      .withIndex("by_customerId", (q) => q.eq("customerId", customerId))
-      .take(INVENTORY_LIMIT - rows.length);
+      .withSearchIndex("search_line_items", (q) =>
+        q.search("searchField", trimmedSearch),
+      )
+      .paginate(boundedOpts);
 
-    rows.push(...batch);
+    return searchResult.page;
   }
 
-  return rows;
+  // Fallback indexed query for a single customer within the target UTC month
+  return await getMonthlyStockEntriesByCustomerId(ctx, {
+    customerId: data.customerId,
+    start: data.start,
+    end: data.end,
+    paginationOpts: boundedOpts,
+  });
 }
 
 /* Join the item, supplier, and customer names the tables display. */
@@ -103,7 +127,7 @@ export async function findStockEntriesByItemId(
   return stocks;
 }
 
-export async function findStockEntriesByItemIdAndCustomerID(
+export async function findStockEntriesByItemIdAndCustomerId(
   ctx: QueryCtx,
   data: {
     itemId: Id<"items">;
@@ -125,6 +149,33 @@ export async function findStockEntriesByItemIdAndCustomerID(
   return stocks;
 }
 
+export async function getMonthlyStockEntriesByCustomerId(
+  ctx: QueryCtx,
+  data: {
+    customerId: Id<"customers">;
+    start: number;
+    end: number;
+    paginationOpts?: PaginationOptions;
+  },
+): Promise<Doc<"lineItems">[]> {
+  // Get monthly line items
+  const baseQuery = ctx.db
+    .query("lineItems")
+    .withIndex("by_customerId_and_orderDate", (q) =>
+      q
+        .eq("customerId", data.customerId)
+        .gte("orderDate", data.start)
+        .lt("orderDate", data.end),
+    );
+
+  if (data.paginationOpts) {
+    const result = await baseQuery.paginate(data.paginationOpts);
+    return result.page;
+  }
+
+  return await baseQuery.collect();
+}
+
 // Create Stock Entry
 export async function createStockEntry(
   ctx: MutationCtx,
@@ -132,12 +183,12 @@ export async function createStockEntry(
     invoiceId?: Id<"invoices">;
     itemId: Id<"items">;
     customerId: Id<"customers">;
-    orderDate: number;
+    orderDate: number | null;
     itemName: string;
-    quantity: number;
-    quantityUnit: string;
-    unitPrice: number;
-    total: number;
+    quantity: number | null;
+    quantityUnit: string | null;
+    unitPrice: number | null;
+    total: number | null;
   },
 ) {
   await ctx.db.insert("lineItems", {
@@ -148,7 +199,7 @@ export async function createStockEntry(
     total: data.total,
     itemId: data.itemId,
     customerId: data.customerId,
-    orderDate: data.orderDate,
+    orderDate: data.orderDate || null,
     updatedAt: Date.now(),
     searchField: data.itemName.toLowerCase(),
   });

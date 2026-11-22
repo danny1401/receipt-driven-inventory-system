@@ -23,7 +23,7 @@ export const listStockEntries = query({
     customerId: v.id("customers"),
   },
   handler: async (ctx, args) => {
-    const entries = await Stock.findStockEntriesByItemIdAndCustomerID(ctx, {
+    const entries = await Stock.findStockEntriesByItemIdAndCustomerId(ctx, {
       itemId: args.itemId,
       customerId: args.customerId,
       limit: STOCK_ENTRY_LIMIT,
@@ -63,7 +63,7 @@ export const addStockEntry = mutation({
   args: {
     itemId: v.id("items"),
     customerId: v.id("customers"),
-    orderDate: v.number(),
+    orderDate: v.optional(v.number()),
     quantity: v.number(),
     quantityUnit: v.string(),
     unitPrice: v.number(),
@@ -83,6 +83,7 @@ export const addStockEntry = mutation({
     await Stock.createStockEntry(ctx, {
       ...args,
       total,
+      orderDate: args.orderDate || null,
       itemName: item.itemName,
     });
 

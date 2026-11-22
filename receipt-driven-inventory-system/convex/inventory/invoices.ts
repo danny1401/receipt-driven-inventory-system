@@ -1,15 +1,10 @@
 import { query, mutation } from "../_generated/server";
 import { v } from "convex/values";
 import { internal } from "../_generated/api";
-import {
-  INVENTORY_LIMIT,
-  monthKeyFromTimestamp,
-  monthRange,
-  resolveCustomerIds,
-} from "./helpers";
-import { Doc } from "../_generated/dataModel";
+import { resolveCustomerIds } from "./helpers";
 import * as Invoice from "../model/invoice";
 import * as Customer from "../model/customer";
+import * as Permission from "../model/permission";
 
 // Generate a short-lived upload URL
 export const generateUploadUrl = mutation(async (ctx) => {
@@ -24,6 +19,10 @@ export const uploadInvoice = mutation({
     customerId: v.optional(v.id("customers")),
   },
   handler: async (ctx, args) => {
+    // Derive the uploader server-side; it is granted access to the customer
+    // once the invoice is saved.
+    const userId = await Permission.getCurrentUserId(ctx);
+
     // Schedule the PDF extraction action to run immediately in the background
     await ctx.scheduler.runAfter(
       0,
@@ -35,6 +34,7 @@ export const uploadInvoice = mutation({
         updatedAt: Date.now(),
         status: "Manually added",
         customerId: args.customerId,
+        ...(userId ? { userId } : {}),
       },
     );
   },
@@ -47,11 +47,10 @@ export const getInvoice = query({
   },
   handler: async (ctx, args) => {
     // Find the database record using the fileName index
-    const processedInvoice = await ctx.db
-      .query("invoices")
-      .withIndex("by_fileName", (q) => q.eq("fileName", args.fileName))
-      .unique();
-
+    const processedInvoice = await Invoice.findInvoiceByFilename(
+      ctx,
+      args.fileName,
+    );
     if (!processedInvoice) {
       throw new Error(`File "${args.fileName}" was not found in the database.`);
     }
@@ -126,113 +125,6 @@ export const listAllInvoices = query({
   },
 });
 
-/**
- * Months that contain invoices, newest first. Used by the month switcher so
- * the picker only offers months the backend can actually return.
- */
-export const listInvoiceMonths = query({
-  args: {
-    customerName: v.optional(v.string()),
-  },
-  handler: async (ctx, args) => {
-    const allowedCustomerIds = await Customer.getAllowedCustomerIds(ctx);
-    if (allowedCustomerIds.length === 0) {
-      return [];
-    }
-
-    const customerIds = await resolveCustomerIds(
-      ctx,
-      args.customerName,
-      allowedCustomerIds,
-    );
-    if (customerIds.length === 0) {
-      return [];
-    }
-
-    const invoices = await Invoice.readInvoicesForCustomers(ctx, customerIds);
-    const months = new Set(
-      invoices.map((invoice) => monthKeyFromTimestamp(invoice.createdAt)),
-    );
-
-    return [...months].sort((a, b) => b.localeCompare(a));
-  },
-});
-
-/** Invoices received in one calendar month, newest first. */
-export const listInvoicesByMonth = query({
-  args: {
-    month: v.string(), // `YYYY-MM`
-    customerName: v.optional(v.string()),
-  },
-  handler: async (ctx, args) => {
-    if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(args.month)) {
-      throw new Error("Month must use the YYYY-MM format.");
-    }
-
-    const allowedCustomerIds = await Customer.getAllowedCustomerIds(ctx);
-    if (allowedCustomerIds.length === 0) {
-      return [];
-    }
-
-    const { start, end } = monthRange(args.month);
-    const customerName = args.customerName?.trim();
-    let invoices: Doc<"invoices">[];
-
-    if (customerName) {
-      const customerIds = await resolveCustomerIds(
-        ctx,
-        customerName,
-        allowedCustomerIds,
-      );
-      if (customerIds.length === 0) {
-        return [];
-      }
-
-      const batches = await Promise.all(
-        customerIds.map((customerId) =>
-          ctx.db
-            .query("invoices")
-            .withIndex("by_customerId", (q) => q.eq("customerId", customerId))
-            .order("desc")
-            .take(INVENTORY_LIMIT),
-        ),
-      );
-
-      invoices = batches
-        .flat()
-        .filter(
-          (invoice) => invoice.createdAt >= start && invoice.createdAt < end,
-        )
-        .sort((a, b) => b.createdAt - a.createdAt)
-        .slice(0, INVENTORY_LIMIT);
-    } else {
-      invoices = await ctx.db
-        .query("invoices")
-        .withIndex("by_creation", (q) =>
-          q.gte("createdAt", start).lt("createdAt", end),
-        )
-        .order("desc")
-        // The month range is bounded; the filter narrows it to accessible customers.
-        // eslint-disable-next-line @convex-dev/no-filter-in-query
-        .filter((q) =>
-          q.or(
-            ...allowedCustomerIds.map((customerId) =>
-              q.eq(q.field("customerId"), customerId),
-            ),
-          ),
-        )
-        .take(INVENTORY_LIMIT);
-    }
-
-    return await Promise.all(
-      invoices.map((invoice) => Invoice.hydrateInvoice(ctx, invoice)),
-    );
-  },
-});
-
-// Total costs this month
-
-
 // Add invoice
 export const addInvoice = mutation({
   args: {
@@ -240,7 +132,7 @@ export const addInvoice = mutation({
     storageId: v.id("_storage"),
 
     orderId: v.union(v.string(), v.null()),
-    orderDate: v.union(v.string(), v.null()),
+    orderDate: v.union(v.number(), v.null()),
     deliveringDate: v.union(v.string(), v.null()),
 
     supplierId: v.id("suppliers"),

@@ -25,11 +25,12 @@ import type * as invoice_pipeline_extractInvoice from "../invoice_pipeline/extra
 import type * as invoice_pipeline_flagInvoice from "../invoice_pipeline/flagInvoice.js";
 import type * as invoice_pipeline_processInvoice from "../invoice_pipeline/processInvoice.js";
 import type * as invoice_pipeline_saveInvoice from "../invoice_pipeline/saveInvoice.js";
+import type * as lib_date from "../lib/date.js";
 import type * as model_customer from "../model/customer.js";
 import type * as model_flagged from "../model/flagged.js";
 import type * as model_invoice from "../model/invoice.js";
 import type * as model_item from "../model/item.js";
-import type * as model_permissions from "../model/permissions.js";
+import type * as model_permission from "../model/permission.js";
 import type * as model_stock from "../model/stock.js";
 import type * as model_supplier from "../model/supplier.js";
 import type * as model_user from "../model/user.js";
@@ -58,11 +59,12 @@ declare const fullApi: ApiFromModules<{
   "invoice_pipeline/flagInvoice": typeof invoice_pipeline_flagInvoice;
   "invoice_pipeline/processInvoice": typeof invoice_pipeline_processInvoice;
   "invoice_pipeline/saveInvoice": typeof invoice_pipeline_saveInvoice;
+  "lib/date": typeof lib_date;
   "model/customer": typeof model_customer;
   "model/flagged": typeof model_flagged;
   "model/invoice": typeof model_invoice;
   "model/item": typeof model_item;
-  "model/permissions": typeof model_permissions;
+  "model/permission": typeof model_permission;
   "model/stock": typeof model_stock;
   "model/supplier": typeof model_supplier;
   "model/user": typeof model_user;

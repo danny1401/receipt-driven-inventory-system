@@ -1,5 +1,11 @@
 import { internalMutation } from "../_generated/server";
 import { v } from "convex/values";
+import * as Invoice from "../model/invoice";
+import * as Item from "../model/item";
+import * as Stock from "../model/stock";
+import * as Customer from "../model/customer";
+import * as Supplier from "../model/supplier";
+import * as Permissions from "../model/permission";
 
 export const saveInvoice = internalMutation({
   // Validators for arguments.
@@ -9,14 +15,16 @@ export const saveInvoice = internalMutation({
     createdAt: v.number(),
     updatedAt: v.number(),
     status: v.string(),
+    /** Uploader, granted access to the invoice's customer. */
+    userId: v.optional(v.id("users")),
 
     supplierName: v.string(),
     supplierOrgId: v.string(),
     customerName: v.string(),
-    customerOrgId: v.union(v.string(), v.null()),
+    customerOrgId: v.string(),
 
     orderId: v.union(v.string(), v.null()),
-    orderDate: v.union(v.string(), v.null()),
+    orderDate: v.union(v.number(), v.null()),
     deliveringDate: v.union(v.string(), v.null()),
 
     order: v.array(
@@ -39,11 +47,7 @@ export const saveInvoice = internalMutation({
   // Mutation implementation.
   handler: async (ctx, args) => {
     // 1. Check if Invoice already exists FIRST (avoids creating unused suppliers/customers)
-    const existingInvoice = await ctx.db
-      .query("invoices")
-      .withIndex("by_fileName", (q) => q.eq("fileName", args.fileName))
-      .unique();
-
+    const existingInvoice = await Invoice.findInvoiceByFilename(ctx, args.fileName)
     if (existingInvoice) {
       throw new Error(
         `Invoice with file name "${args.fileName}" already exists.`,
@@ -51,42 +55,35 @@ export const saveInvoice = internalMutation({
     }
 
     // 2. Handle Supplier (Find or Create)
-    const existingSupplier = await ctx.db
-      .query("suppliers")
-      .withIndex("by_supplierOrgId", (q) =>
-        q.eq("supplierOrgId", args.supplierOrgId),
-      )
-      .unique();
-
+    const [existingSupplier] = await Supplier.findSupplierByOrgId(ctx, args.supplierOrgId)
     const supplierId = existingSupplier
       ? existingSupplier._id
-      : await ctx.db.insert("suppliers", {
+      : await Supplier.createSupplier (ctx, {
           supplierOrgId: args.supplierOrgId,
           supplierName: args.supplierName,
-          searchField: args.supplierName.toLowerCase(),
         });
 
     // 3. Handle Customer (Find or Create)
-    const existingCustomer = await ctx.db
-      .query("customers")
-      .withIndex("by_customerOrgId", (q) =>
-        q.eq("customerOrgId", args.customerOrgId),
-      )
-      .unique();
-
+    const [existingCustomer] = await Customer.findCustomerByOrgId(ctx, args.customerOrgId)
     const customerId = existingCustomer
       ? existingCustomer._id
-      : await ctx.db.insert("customers", {
-          customerOrgId: args.customerOrgId,
+      : await Customer.createCustomer(ctx, {
           customerName: args.customerName,
-          searchField: args.customerName.toLowerCase(), // <-- Add this to satisfy the schema
+          customerOrgId: args.customerOrgId,
+          userId: args.userId,
         });
+
+    // Existing customers are reused, so grant access on every save, not only
+    // when a new customer row is created.
+    if (args.userId) {
+      await Permissions.ensurePermission(ctx, args.userId, customerId);
+    }
 
     // Extra step: 
     const OrderDateUnix = args.orderDate ? new Date(args.orderDate).getTime() : Date.now();
 
     // 4. Insert Invoice
-    const invoiceId = await ctx.db.insert("invoices", {
+    await Invoice.createInvoice(ctx, {
       fileName: args.fileName,
       storageId: args.storageId,
       createdAt: args.createdAt,
@@ -98,21 +95,27 @@ export const saveInvoice = internalMutation({
       supplierId,
       customerId,
       sum: args.sum,
-      searchField: args.customerName.toLowerCase(),
     });
+
+    // Check if it went successful
+    const createdInvoice = await Invoice.findInvoiceByFilename(ctx, args.fileName);
+    if (!createdInvoice) {
+      throw new Error(`Failed to retrieve invoice with file name "${args.fileName}".`);
+    }
+    const invoiceId = createdInvoice._id;
 
     // 5. Insert Items and Line Items using the correct variable names (`supplierId`, `invoiceId`, `customerId`)
     for (const item of args.order) {
-      const newItemId = await ctx.db.insert("items", {
+      const newItemId = await Item.getOrCreateItem(ctx, {
         sku: item.sku,
         itemName: item.itemName,
         category: item.category,
         supplierId: supplierId,
-        searchField: item.itemName.toLowerCase(),
       });
 
-      await ctx.db.insert("lineItems", {
+      await Stock.createStockEntry(ctx, {
         itemId: newItemId,
+        itemName: item.itemName,
         invoiceId: invoiceId,
         customerId: customerId,
         quantity: item.quantity,
@@ -120,8 +123,6 @@ export const saveInvoice = internalMutation({
         unitPrice: item.unitPrice,
         total: item.total,
         orderDate: OrderDateUnix,
-        updatedAt: item.updatedAt,
-        searchField: item.itemName.toLowerCase(),
       });
     }
 

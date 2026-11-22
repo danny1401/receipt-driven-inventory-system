@@ -19,7 +19,7 @@ export async function findSupplierByOrgId(
   const supplier = await Promise.all([
     ctx.db.query("suppliers")
       .withIndex("by_supplierOrgId", (q) => q.eq("supplierOrgId", supplierOrgId))
-      .first(),
+      .unique(),
   ]);
 
   if (!supplier) throw new Error("Specified supplier does not exist.");

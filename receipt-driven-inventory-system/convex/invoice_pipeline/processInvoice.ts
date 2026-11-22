@@ -43,10 +43,9 @@ export const processInvoice = internalAction({
 
       parsedData.order = parsedData.order.map((item: any) => ({
         ...item,
+        createdAt: args.createdAt,
         updatedAt: args.updatedAt,
       }));
-
-      console.log("ParsedData:", parsedData);
 
       console.log(`[processInvoice] Parsing response.`);
 
@@ -63,6 +62,7 @@ export const processInvoice = internalAction({
         createdAt: args.createdAt,
         updatedAt: args.updatedAt,
         status: args.status,
+        ...(args.userId ? { userId: args.userId } : {}),
 
         supplierName: parsedData.supplierName,
         supplierOrgId: parsedData.supplierOrgId,
@@ -79,7 +79,7 @@ export const processInvoice = internalAction({
       });
 
       console.log(
-        `[processInvoice] Forwarding to internal mutation [saveInvoice].`,
+        `[saveInvoice] Internal mutation went successfully.`,
       );
     } catch (error: any) {
       // If any error happens (API down, bad JSON, unreadable PDF), flag it for review
